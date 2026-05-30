@@ -1,4 +1,5 @@
 # 2ManyTabs MCP
+<img width="799" height="254" alt="image" src="https://github.com/user-attachments/assets/7ee50e2b-cb51-43b2-b3b4-e87aeb0e21c4" />
 
 <div align="center">
 
