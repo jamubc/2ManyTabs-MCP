@@ -16,7 +16,10 @@ function isAlive() {
   return ws !== null && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING);
 }
 
-function connect() {
+async function connect() {
+  const { enabled = true } = await chrome.storage.local.get('enabled');
+  if (!enabled) return;
+
   if (isAlive()) return;
 
   try {
@@ -76,16 +79,34 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 // ---------------------------------------------------------------------------
-// Startup / install wakeups
+// Startup / install wakeups & state listening
 // ---------------------------------------------------------------------------
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create(ALARM_NAME, { periodInMinutes: 0.5 });
-  connect();
+  chrome.storage.local.get('enabled', (res) => {
+    if (res.enabled === undefined) chrome.storage.local.set({ enabled: true });
+    connect();
+  });
 });
 
 chrome.runtime.onStartup.addListener(() => {
   connect();
+});
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'local' && changes.enabled !== undefined) {
+    if (changes.enabled.newValue) {
+      connect();
+    } else {
+      if (ws) {
+        ws.onclose = null; // Prevent reconnect loop
+        ws.close();
+        ws = null;
+      }
+      setStatus(false);
+    }
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -100,6 +121,7 @@ async function dispatch(msg) {
   switch (msg.action) {
     case 'query_tabs': return queryTabs();
     case 'close_tabs': return closeTabs(msg.tab_ids);
+    case 'open_tabs':  return openTabs(msg.urls);
     case 'ping':       return { pong: true };
     default:
       throw new Error(`Unknown action: ${msg.action}`);
@@ -132,6 +154,22 @@ async function closeTabs(tabIds) {
   const ids = tabIds.filter(id => live.has(id));
   if (ids.length > 0) await chrome.tabs.remove(ids);
   return { closed: ids.length };
+}
+
+async function openTabs(urls) {
+  if (!Array.isArray(urls) || urls.length === 0) return { opened: 0 };
+  
+  // Create all tabs in parallel
+  const createPromises = urls.map(url => {
+    // If URL doesn't have a protocol, prepend https://
+    const finalUrl = (!url.startsWith('http://') && !url.startsWith('https://')) 
+      ? `https://${url}` 
+      : url;
+    return chrome.tabs.create({ url: finalUrl, active: false });
+  });
+  
+  await Promise.all(createPromises);
+  return { opened: urls.length };
 }
 
 // ---------------------------------------------------------------------------

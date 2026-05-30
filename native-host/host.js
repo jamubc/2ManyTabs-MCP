@@ -47,3 +47,10 @@ startBridge();
 const transport = new StdioServerTransport();
 await server.connect(transport);
 process.stderr.write(`[2manytabs-mcp] MCP server ready (${toolRegistry.length} tools) on stdio\n`);
+
+// Ensure clean exit when the parent process disconnects or terminates
+const cleanup = () => process.exit(0);
+process.stdin.on('close', cleanup);
+process.stdin.on('end', cleanup);
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);

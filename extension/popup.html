@@ -13,40 +13,48 @@
       font-size: 13px;
       background: #07080c;
       color: #cbd5e1;
-      padding: 18px 16px 14px 16px;
+      padding: 24px 20px 20px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
       overflow: hidden;
+      position: relative;
     }
 
     .eye-container {
-      margin-top: 4px;
-      margin-bottom: 8px;
+      margin-bottom: 24px;
       display: flex;
       justify-content: center;
       align-items: center;
-    }
-
-    .robot-eye {
-      filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.2));
     }
 
     .vision-container {
-      font-size: 14px;
-      font-weight: 500;
-      color: #94a3b8;
-      margin-bottom: 16px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      margin-bottom: 28px;
       user-select: none;
     }
 
+    .vision-eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #888;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .vision-main {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
     .tab-count-value {
-      font-size: 22px;
+      font-size: 38px;
       font-weight: 800;
       background: linear-gradient(135deg, #00f2fe 0%, #c084fc 100%);
       -webkit-background-clip: text;
@@ -54,16 +62,20 @@
       line-height: 1;
     }
 
+    .vision-tabs-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
     .pill {
-      font-size: 10px;
+      font-size: 11px;
       color: #94a3b8;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      margin-bottom: 0;
-      margin-left: 8px;
-      margin-right: 8px;
+      gap: 6px;
+      margin: 0;
       font-weight: 500;
     }
 
@@ -80,13 +92,11 @@
 
     /* Connected state styling */
     .pill.connected .status-value {
-      color: #00f2fe;
+      color: #00ffff;
     }
 
     .pill.connected .status-dot {
-      background: #00f2fe;
-      box-shadow: 0 0 8px #00f2fe;
-      animation: status-pulse 1.8s infinite ease-in-out;
+      background: #00ffff;
     }
 
     /* Disconnected state styling */
@@ -98,75 +108,97 @@
       background: #ff5353;
     }
 
-    @keyframes status-pulse {
-      0%, 100% { transform: scale(1); opacity: 0.6; }
-      50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #00f2fe; }
-    }
-
     .footer {
       width: 100%;
-      border-top: 1px solid rgba(255, 255, 255, 0.04);
-      padding-top: 12px;
-      margin-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 16px;
+      margin-top: 4px;
     }
 
     .links-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 10px;
+      font-size: 11px;
     }
 
     .support-link {
-      color: #00f2fe;
+      color: #888;
       text-decoration: none;
       transition: color 0.2s ease;
       font-weight: 500;
     }
 
     .support-link:hover {
-      color: #c084fc;
-      text-decoration: underline;
+      color: #cbd5e1;
     }
 
-    .quote {
-      color: #64748b;
-      font-style: italic;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      user-select: none;
+    .toggle-container {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 28px;
+      height: 16px;
     }
 
-    .heart {
-      color: #f43f5e;
-      display: inline;
+    .toggle-input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #334155;
+      transition: .3s;
+      border-radius: 16px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    .toggle-input:checked + .toggle-slider {
+      background-color: #00ffff;
+    }
+
+    .toggle-input:checked + .toggle-slider:before {
+      transform: translateX(12px);
+      background-color: #07080c;
     }
   </style>
 </head>
 
 <body>
+  <label class="toggle-container" aria-label="Toggle MCP">
+    <input type="checkbox" id="powerToggle" class="toggle-input" checked>
+    <span class="toggle-slider"></span>
+  </label>
+
   <div class="eye-container">
-    <svg class="robot-eye" viewBox="0 0 100 100" width="56" height="56">
-      <!-- Robot head outline -->
-      <rect x="18" y="28" width="64" height="44" rx="12" fill="none" stroke="#475569" stroke-width="4"/>
-      <path d="M42 28 V18 H58 V28" fill="none" stroke="#475569" stroke-width="4" stroke-linejoin="round"/>
-      <circle cx="50" cy="14" r="3" fill="#00f2fe"/>
-      <!-- Robot eye lens -->
-      <circle cx="50" cy="50" r="14" fill="none" stroke="#00f2fe" stroke-width="4"/>
-      <circle cx="50" cy="50" r="7" fill="#00f2fe">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
-      </circle>
-      <!-- Small ear elements -->
-      <rect x="12" y="42" width="6" height="16" rx="2" fill="#334155"/>
-      <rect x="82" y="42" width="6" height="16" rx="2" fill="#334155"/>
+    <svg class="robot-eye" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="6" width="18" height="12" rx="3" />
+      <circle cx="12" cy="12" r="3" stroke="#00f2fe" />
     </svg>
   </div>
 
   <div class="vision-container">
-    <span>MCP can see:</span>
-    <span class="tab-count-value" id="tabCount">–</span>
-    <span>Tabs</span>
+    <div class="vision-eyebrow">MCP can see</div>
+    <div class="vision-main">
+      <span class="tab-count-value" id="tabCount">–</span>
+      <span class="vision-tabs-text">Tabs</span>
+    </div>
   </div>
 
   <div class="footer">
@@ -176,7 +208,6 @@
         <span class="status-dot"></span>
         <span class="status-value" id="statusText">Disconnected</span>
       </div>
-      <span class="quote">built with <span class="heart">♥</span> for open source</span>
     </div>
   </div>
 

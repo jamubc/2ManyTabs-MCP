@@ -4,8 +4,10 @@
 
 import { listTabsTool }  from './list-tabs.tool.js';
 import { closeTabsTool } from './close-tabs.tool.js';
+import { openTabsTool }  from './open-tabs.tool.js';
 
 export const toolRegistry = [
   listTabsTool,
   closeTabsTool,
+  openTabsTool,
 ];

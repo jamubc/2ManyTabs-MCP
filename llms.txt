@@ -1,28 +1,35 @@
 # 2ManyTabs MCP
 
-> Chrome tab management via the Model Context Protocol. List, group, close, and deduplicate browser tabs from any MCP client — Claude Desktop, Hermes, Cursor, Cline, and others.
+> Chrome tab management via the Model Context Protocol. List, group, close, and deduplicate browser tabs from any MCP client — Claude Desktop, VS Code/Copilot, Cursor, Windsurf, Continue, Cline, Hermes, and others.
 
 Two components: a **Chrome Extension** (MV3 service worker) that proxies `chrome.tabs` calls, and a **Node.js MCP host** that runs over stdio and communicates with the extension over WebSocket port 9876. No daemon, no cloud dependency — everything runs locally on loopback.
 
 Important notes:
 - The extension is a thin proxy (query + close only). All selection, grouping, and dedup logic lives in the MCP host — new capabilities ship without an extension update.
 - Multiple MCP clients can share the same browser. Host processes self-organize with an owner/follower pattern: one binds port 9876, the rest proxy through it. On owner death, followers re-elect automatically.
-- Requires Chrome, Node >= 18, and an available loopback port 9876.
+- Requires Chrome (or any Chromium browser), Node >= 18, and an available loopback port 9876.
 - The extension auto-reconnects via `chrome.alarms` every 30 seconds (required by MV3 idle behaviour).
 - Created by jamubc.
 
 ## Install
 
 - [Chrome Extension](https://github.com/jamubc/2manytabs-mcp/tree/main/extension): Load `extension/` as an unpacked extension — open `chrome://extensions`, enable Developer mode, click "Load unpacked", select the directory.
-- [MCP Host](https://github.com/jamubc/2manytabs-mcp/tree/main/native-host): `cd native-host && npm install` — installs the Node.js MCP host and its dependencies.
-- [Hermes config](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/host.js): Add to `~/.hermes/config.yaml` as an MCP server with stdio transport and the absolute path to `native-host/host.js`.
-- [Claude Desktop config](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/host.js): Add to `claude_desktop_config.json` as an MCP server with command `node` and args `["/absolute/path/to/native-host/host.js"]`.
-- [Cursor / other MCP clients](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/host.js): Same pattern — point any stdio-based MCP client at `native-host/host.js`. Restart your agent after configuration.
+- [MCP Host via npx](https://www.npmjs.com/package/2manytabs-mcp-host): Run `npx -y 2manytabs-mcp-host` — no global install needed.
+- [Claude Code](https://github.com/jamubc/2manytabs-mcp): `claude mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host`
+- [Claude Desktop](https://github.com/jamubc/2manytabs-mcp): Add to `claude_desktop_config.json` with command `npx` and args `["-y", "2manytabs-mcp-host"]`.
+- [VS Code / Copilot Chat](https://code.visualstudio.com/docs/copilot/customization/mcp-servers): Add to `.vscode/mcp.json` with the same command/args block.
+- [Cursor](https://github.com/jamubc/2manytabs-mcp): Add to `.cursor/mcp.json` or Settings → MCP.
+- [Windsurf](https://windsurf.com/university/general-education/intro-to-mcp): Add to `mcp_config.json` or Settings → Cascade → MCP.
+- [Continue](https://docs.continue.dev/customize/mcp-tools): Add to `.continue/config.json` or `.continue/mcpServers/`.
+- [Cline](https://docs.cline.bot/mcp/mcp-overview): Add via the MCP Servers panel.
+- [Hermes Agent](https://github.com/all-in-aigen/hermes): `hermes mcp add 2manytabs-mcp --command "npx -y 2manytabs-mcp-host"`
+- Any stdio MCP client: Point it at `npx -y 2manytabs-mcp-host`.
 
 ## Tools
 
 - [list_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/list-tabs.tool.js): Read open Chrome tabs. Returns a domain histogram with proportional bars plus a per-domain tab listing showing titles, pinned (📌), and audible (🔊) flags. Accepts `query` (case-insensitive substring filter), `group_by` (`domain`, `window`, or `none`), and `duplicates_only` (show only duplicate tabs). Read-only — never closes anything.
 - [close_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/close-tabs.tool.js): Close Chrome tabs by one of three selection modes: explicit `tab_ids` (array of numbers), `match` (case-insensitive substring against title or URL), or `duplicates: true` (every tab sharing a URL with an earlier one). Supports `dry_run: true` to preview without closing. Exactly one selection mode required.
+- [open_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/open-tabs.tool.js): Open new tabs in the browser given an array of `urls`.
 
 ## Architecture
 

@@ -13,8 +13,9 @@ export const listTabsTool = {
   title: 'List Tabs',
   description:
     'Read open Chrome tabs. Returns a domain histogram (the fastest way to understand a large ' +
-    'tab set) plus a detailed view. Filter with `query`, reshape with `group_by`, or isolate ' +
-    'redundant tabs with `duplicates_only`. Read-only — never closes anything.',
+    'tab set) plus a detailed view. When summarizing the results for the user, you should ' +
+    'include the histogram bar graph in your response. Filter with `query`, reshape with ' +
+    '`group_by`, or isolate redundant tabs with `duplicates_only`. Read-only — never closes anything.',
   annotations: { readOnlyHint: true, openWorldHint: true },
   inputSchema: {
     query: z.string().optional()

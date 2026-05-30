@@ -8,72 +8,59 @@
 [![npm version](https://img.shields.io/npm/v/2manytabs-mcp-host)](https://www.npmjs.com/package/2manytabs-mcp-host)
 [![npm downloads](https://img.shields.io/npm/dt/2manytabs-mcp-host)](https://www.npmjs.com/package/2manytabs-mcp-host)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Open Source](https://img.shields.io/badge/Open%20Source-❤️-red.svg)](https://github.com/jamubc/2manytabs-mcp)
 
 </div>
 
-> ☄️ Expose browser tabs to your AI assistant via the Model Context Protocol. List, group, deduplicate, and bulk-close tabs directly from Claude Code, Claude Desktop, Hermes, Cursor, and more.
+> List, group, deduplicate, and bulk-close browser tabs with natural language — from any MCP client.
 
-`2ManyTabs MCP` solves the browser clutter problem. It consists of two components: a **Browser Extension** that acts as a thin proxy for browser tabs, and a **Node.js MCP Host** that communicates with the extension over WebSocket (local loopback) and connects to your AI client over stdio.
+A Chrome extension acts as a thin proxy for `chrome.tabs`. A Node.js MCP host handles all the logic (filtering, grouping, dedup) and talks to your AI client over stdio. Everything runs locally on loopback.
 
-<a href="https://glama.ai/mcp/servers/@jamubc/2manytabs-mcp">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@jamubc/2manytabs-mcp/badge" alt="2ManyTabs MCP server" />
-</a>
+## Browsers
 
-## ☄️ Quick Summary
+Works with any Chromium browser:
 
-* **Goal:** Organize, sort, deduplicate, and bulk-close browser tabs using natural language.
-* **Compatibility:** 
-  * Chrome & Chromium-based browsers (Edge, Brave, Opera) are fully supported.
-  * Firefox and Safari support are planned.
-* **Get the Extension:** Download `2ManyTabs_CHROME.zip` from our [GitHub Releases](https://github.com/jamubc/2ManyTabs-MCP/releases) page or load the `extension/` folder directly.
+[![Chrome](https://img.shields.io/badge/Chrome-4285F4?logo=googlechrome&logoColor=fff&style=flat-square)](https://www.google.com/chrome/)
+[![Brave](https://img.shields.io/badge/Brave-FF1B2D?logo=brave&logoColor=fff&style=flat-square)](https://brave.com/)
+[![Edge](https://img.shields.io/badge/Edge-0078D7?logo=microsoftedge&logoColor=fff&style=flat-square)](https://www.microsoft.com/edge)
+[![Opera](https://img.shields.io/badge/Opera-FF1B2D?logo=opera&logoColor=fff&style=flat-square)](https://www.opera.com/)
+[![Comet](https://img.shields.io/badge/Comet-886FBF?style=flat-square)](https://www.perplexity.ai/comet)
 
----
-
-## Architecture
-
-```
-Claude / AI Client 
-       │
- (stdio JSON-RPC)
-       ▼
- ┌───────────┐ 
- │  host.js  │ ◄─────── (Self-organizing Bridge: WS port 9876)
- └─────┬─────┘
-       │
-  (WebSocket)
-       ▼
- ┌───────────┐
- │ Extension │ (thin browser tabs background worker proxy)
- └───────────┘
-```
-
-- **Unified Tool Pattern:** The browser extension is a minimal query/close proxy. All filtering, grouping, and deduplication logic resides entirely in the Node.js host. Adding new capabilities requires zero extension updates!
-- **Self-Organizing Bridge:** MCP-over-stdio spawns a separate host process for every client session. `2ManyTabs` implements an **Owner/Follower pattern** where the first host binds to port `9876` (Owner) and subsequent hosts proxy calls through it (Followers). If the Owner dies, Followers automatically re-elect a new Owner.
+Firefox and Safari are planned.
 
 ---
 
 ## Prerequisites
 
-Before starting, ensure you have:
-1. **[Node.js](https://nodejs.org/)** (v18.0.0 or higher)
-2. A supported browser (Google Chrome, Brave, Edge, etc.)
-3. An available local loopback port `9876`
+- **[Node.js](https://nodejs.org/) v18+**
+- Local port `9876` available
 
 ---
 
-## Quick Setup
+## Step 1 · Install the MCP Host
 
-### 1. Install the MCP Host
-You can run the host directly via `npx` (recommended) or download it from NPM:
+Pick your client below. They all run the same server — just different config locations.
 
-#### Claude Code (One-Line Setup)
+### Verified Clients
+
+<details>
+<summary><strong>Claude Code</strong></summary>
+
 ```bash
 claude mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
 ```
+</details>
 
-#### Claude Desktop
-Add this to your configuration file:
+<details>
+<summary><strong>Claude Desktop</strong></summary>
+
+Add to your config file:
+
+| OS | Path |
+|---|---|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Linux | `~/.config/claude/claude_desktop_config.json` |
+
 ```json
 {
   "mcpServers": {
@@ -85,88 +72,216 @@ Add this to your configuration file:
 }
 ```
 
-*Note: If you prefer a local git installation, clone the repository and run `bash install.sh`.*
+Restart Claude Desktop after saving.
+</details>
+
+<details>
+<summary><strong>VS Code / GitHub Copilot Chat</strong></summary>
+
+Create `.vscode/mcp.json` in your workspace (or add to your user `settings.json` under `"mcp"`):
+
+```json
+{
+  "mcpServers": {
+    "2manytabs-mcp": {
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+
+See the [VS Code MCP docs](https://code.visualstudio.com/docs/copilot/customization/mcp-servers) for details.
+</details>
+
+<details>
+<summary><strong>Cursor</strong></summary>
+
+Open **Settings → MCP** and add a new server, or create/edit `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "2manytabs-mcp": {
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><strong>Windsurf</strong></summary>
+
+Open **Settings → Cascade → MCP**, or create/edit `mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "2manytabs-mcp": {
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+
+See the [Windsurf MCP guide](https://windsurf.com/university/general-education/intro-to-mcp) for details.
+</details>
+
+<details>
+<summary><strong>Continue</strong></summary>
+
+Add to `.continue/config.json` (or create `.continue/mcpServers/2manytabs-mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "2manytabs-mcp": {
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+
+See the [Continue MCP docs](https://docs.continue.dev/customize/mcp-tools) for details.
+</details>
+
+<details>
+<summary><strong>Cline</strong></summary>
+
+Open the **MCP Servers** panel in Cline and add a new server:
+
+- **Command:** `npx`
+- **Args:** `-y 2manytabs-mcp-host`
+
+Or edit the Cline MCP config JSON directly with the same block used above. See the [Cline MCP docs](https://docs.cline.bot/mcp/mcp-overview) for details.
+</details>
+
+<details>
+<summary><strong>Hermes Agent</strong></summary>
+
+```bash
+hermes mcp add 2manytabs-mcp --command "npx -y 2manytabs-mcp-host"
+```
+
+Restart your session (`/reset` or start a new `hermes` invocation), then verify:
+
+```bash
+hermes mcp list
+hermes mcp test 2manytabs-mcp
+```
+
+Config lives at `~/.hermes/config.yaml` under the `mcp` section.
+</details>
+
+### Should Also Work
+
+These clients support MCP but we haven't tested them directly. The same JSON config block should work — just drop it into the client's MCP config file:
+
+| Client | Notes |
+|---|---|
+| [LibreChat](https://docs.librechat.ai/) | MCP agent/tool server support documented |
+| [ChatGPT](https://platform.openai.com/docs/mcp) | MCP connectors exist; local stdio flow unverified |
+| [Sourcegraph Cody](https://sourcegraph.com/cody) | MCP via OpenCTX; setup syntax unverified |
+| [Genkit](https://firebase.google.com/products/genkit) | `genkitx-mcp` plugin can consume MCP servers |
+| [Zed](https://zed.dev/) | Tool support is experimental — prompts/resources only in some builds |
+
+If your client speaks MCP over stdio, it will work. Point it at `npx -y 2manytabs-mcp-host` and you're set.
 
 ---
 
-### 2. Load the Browser Extension
+## Step 2 · Load the Browser Extension
 
-#### For Google Chrome and Chromium Browsers
-Because the extension is loaded locally during developer setup:
-1. Open your browser and navigate to `chrome://extensions/` (or `edge://extensions/` for Edge).
-2. Enable **Developer mode** (usually a toggle in the top-right corner).
-3. Click **Load unpacked** (top-left corner).
-4. Select the `extension/` directory of this repository (or unzip and load the pre-packaged zip from the `releases/` directory).
-5. Click the extension icon in the toolbar; once the host is running, the popup status pill will transition to **Connected**.
+1. Go to `chrome://extensions/` (or `edge://extensions/`, `brave://extensions/`, etc.)
+2. Enable **Developer mode** (toggle in the top-right)
+3. Click **Load unpacked**
+4. Select the `extension/` directory from this repo (or the unzipped release)
+5. Click the extension icon in the toolbar — the popup should show **Connected** once the host is running
 
 ---
 
-## Configuration File Locations
+## What You Can Say
 
-- **Claude Desktop**:
-  - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-  - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-  - **Linux**: `~/.config/claude/claude_desktop_config.json`
+Just talk to your AI client:
 
-Restart your AI client/session after modifying the configuration.
-
----
-
-## Example Workflow & Commands
-
-### Natural Language Prompts
-* "Analyze my open tabs and show me where they're grouped."
-* "Find all duplicate tabs and close them."
-* "Show me all my open Github tabs."
-* "Do a dry run of closing tabs matching 'youtube' and let me know."
-
-### Claude Code Slash Commands
-Type `/2manytabs-mcp` or run tools directly:
-* `/list_tabs` - Get a summary of all open tabs.
-* `/close_tabs` - Bulk-close selected tabs.
+- *"Show me all my open tabs."*
+- *"Find and close duplicate tabs."*
+- *"Close everything matching 'youtube'."*
+- *"Do a dry run of closing all tabs from reddit.com."*
+- *"Group my tabs by domain and show the breakdown."*
 
 ---
 
 ## Tools
 
-`2ManyTabs MCP` registers the following tools with the AI:
+The host exposes two tools:
 
-### 1. `list_tabs`
-Retrieve and summarize all currently open tabs.
-- **Histogram Visualization:** Always displays a neat proportional bar graph (using characters like `▇`) representing the top domains, allowing the AI to understand your tab profile instantly.
-- **Arguments:**
-  - `query` (optional string): Substring to match (case-insensitive) against tab titles or URLs.
-  - `group_by` (optional enum: `domain`, `window`, `none`, defaults to `domain`): Organization style of the detailed list.
-  - `duplicates_only` (optional boolean, defaults to `false`): Restricts the list to tabs that have duplicate URLs (ignoring the first occurrence).
+### `list_tabs`
 
-### 2. `close_tabs`
-Bulk-close tabs using one of three selection criteria.
-- **Safety First:** Supports a `dry_run` preview mode. It is highly recommended to run a dry run first when closing many tabs.
-- **Arguments:**
-  - `tab_ids` (optional array of numbers): Close specific tab IDs.
-  - `match` (optional string): Close all tabs containing this substring in their URL or title.
-  - `duplicates` (optional boolean): Close every duplicate tab (keeps the first occurrence of each URL, closes the rest).
-  - `dry_run` (optional boolean, defaults to `false`): If `true`, returns a JSON preview of the tabs that would be closed without actually closing them.
+Read-only. Returns a domain histogram with proportional bars and a per-domain listing with titles, pinned (📌), and audible (🔊) flags.
 
-*Note: You must supply exactly one selection mode (`tab_ids`, `match`, or `duplicates`).*
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `query` | string | — | Substring filter on title or URL |
+| `group_by` | `"domain"` · `"window"` · `"none"` | `"domain"` | How to group results |
+| `duplicates_only` | boolean | `false` | Show only duplicate URLs |
+
+### `close_tabs`
+
+Closes tabs. Exactly one selection mode required:
+
+| Param | Type | Description |
+|---|---|---|
+| `tab_ids` | number[] | Close specific tab IDs |
+| `match` | string | Close tabs matching this substring |
+| `duplicates` | boolean | Close all duplicates (keeps first occurrence) |
+| `dry_run` | boolean | Preview what would close without closing |
+
+### `open_tabs`
+
+Opens new tabs in the browser.
+
+| Param | Type | Description |
+|---|---|---|
+| `urls` | string[] | Array of URLs to open |
 
 ---
 
-## 🔒 Security Hardening
+## Architecture
 
-To protect your system, `2ManyTabs MCP` includes **WebSocket Origin Verification**:
-- **CORS & Origin Checks:** The local host server strictly validates the `Origin` header of incoming WebSockets.
-- **Extension Isolation:** Only requests originating from a `chrome-extension://` scheme can connect to the main WebSocket router. Malicious web pages trying to run local loopback attacks are rejected instantly with a `4003` HTTP socket error.
-- **Loopback Bound:** The HTTP server listens exclusively on `127.0.0.1`, preventing any external machines on your local network from accessing your browser.
+```
+  AI Client ◄──stdio──► MCP Host ──WebSocket :9876──► Browser Extension
+                           │
+                           ▼
+                      Follower Hosts
+```
+
+- The extension is a thin proxy — `query` and `close` only. All logic lives in the host, so new capabilities ship without an extension update.
+- Multiple AI clients can share one browser. Hosts self-organize: one binds port 9876 (owner), the rest proxy through it (followers). On owner death, followers re-elect automatically.
+- The extension reconnects via `chrome.alarms` every 30s (MV3 idle behavior).
+
+---
+
+## Security
+
+- **Loopback only** — the server binds to `127.0.0.1`, not `0.0.0.0`.
+- **Origin validation** — only `chrome-extension://` origins can connect. Web pages attempting loopback attacks get rejected with a `4003` close code.
+- **No cloud, no daemon** — everything stays on your machine.
 
 ---
 
 ## Contributing
 
-Contributions are welcome! If you want to help add Firefox or Safari support, please submit a pull request or report issues on GitHub.
+PRs welcome. Browser support is the biggest gap right now:
+
+[![Firefox](https://img.shields.io/badge/Firefox-Planned-FF7139?logo=firefox&logoColor=fff&style=flat-square)](https://www.mozilla.org/firefox/)
+[![Safari](https://img.shields.io/badge/Safari-Planned-000000?logo=safari&logoColor=fff&style=flat-square)](https://www.apple.com/safari/)
+
+For a local dev setup, clone the repo and run `bash install.sh`.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-**Disclaimer:** This is an unofficial tool and is not affiliated with, endorsed, or sponsored by Google or Mozilla.
+MIT — see [LICENSE](LICENSE).

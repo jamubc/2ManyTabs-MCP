@@ -12,7 +12,20 @@ export const closeTabsTool = {
     'Close Chrome tabs by one selection mode: `tab_ids` (explicit), `match` (substring of ' +
     'title/URL), or `duplicates` (every tab sharing a URL with an earlier one). Set `dry_run` ' +
     'to preview the exact tabs that would close without touching them. Destructive — closed ' +
-    'tabs cannot be recovered through this tool.',
+    'tabs cannot be recovered through this tool.\n\n' +
+    'CRITICAL: You MUST explicitly ask the user for confirmation before running this tool with ' +
+    'dry_run=false, unless they already asked you to.\n\n' +
+    'Examples:\n' +
+    '- {"tab_ids": [123, 456], "dry_run": true}\n' +
+    '- {"match": "github.com", "dry_run": false}\n' +
+    '- {"duplicates": true, "dry_run": true}\n\n' +
+    'Returns:\n' +
+    '  JSON object containing:\n' +
+    '  - dry_run (boolean): Whether this was a preview\n' +
+    '  - reason (string): Description of selection criteria\n' +
+    '  - count/closed (int): Number of tabs matched/closed\n' +
+    '  - by_domain (object): Map of domain to count\n' +
+    '  - sample (array): First 10 tabs with {id, title}',
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
@@ -75,10 +88,10 @@ export const closeTabsTool = {
     };
 
     if (dry_run) {
-      return `🔎 DRY RUN — would close ${targets.length} tab(s):\n` + JSON.stringify(preview, null, 2);
+      return JSON.stringify({ dry_run: true, ...preview }, null, 2);
     }
 
     const res = await callExtension('close_tabs', { tab_ids: targets.map((t) => t.id) });
-    return `✅ Closed ${res.closed} tab(s) (${reason}).\n` + JSON.stringify(preview.by_domain, null, 2);
+    return JSON.stringify({ dry_run: false, closed: res.closed, reason, by_domain: preview.by_domain, sample: preview.sample }, null, 2);
   },
 };
