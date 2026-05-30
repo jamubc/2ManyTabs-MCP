@@ -1,0 +1,40 @@
+# 2ManyTabs MCP
+
+> Chrome tab management via the Model Context Protocol. List, group, close, and deduplicate browser tabs from any MCP client — Claude Desktop, Hermes, Cursor, Cline, and others.
+
+Two components: a **Chrome Extension** (MV3 service worker) that proxies `chrome.tabs` calls, and a **Node.js MCP host** that runs over stdio and communicates with the extension over WebSocket port 9876. No daemon, no cloud dependency — everything runs locally on loopback.
+
+Important notes:
+- The extension is a thin proxy (query + close only). All selection, grouping, and dedup logic lives in the MCP host — new capabilities ship without an extension update.
+- Multiple MCP clients can share the same browser. Host processes self-organize with an owner/follower pattern: one binds port 9876, the rest proxy through it. On owner death, followers re-elect automatically.
+- Requires Chrome, Node >= 18, and an available loopback port 9876.
+- The extension auto-reconnects via `chrome.alarms` every 30 seconds (required by MV3 idle behaviour).
+- Created by jamubc.
+
+## Install
+
+- [Chrome Extension](https://github.com/jamubc/2manytabs-mcp/tree/main/extension): Load `extension/` as an unpacked extension — open `chrome://extensions`, enable Developer mode, click "Load unpacked", select the directory.
+- [MCP Host](https://github.com/jamubc/2manytabs-mcp/tree/main/native-host): `cd native-host && npm install` — installs the Node.js MCP host and its dependencies.
+- [Hermes config](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/host.js): Add to `~/.hermes/config.yaml` as an MCP server with stdio transport and the absolute path to `native-host/host.js`.
+- [Claude Desktop config](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/host.js): Add to `claude_desktop_config.json` as an MCP server with command `node` and args `["/absolute/path/to/native-host/host.js"]`.
+- [Cursor / other MCP clients](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/host.js): Same pattern — point any stdio-based MCP client at `native-host/host.js`. Restart your agent after configuration.
+
+## Tools
+
+- [list_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/list-tabs.tool.js): Read open Chrome tabs. Returns a domain histogram with proportional bars plus a per-domain tab listing showing titles, pinned (📌), and audible (🔊) flags. Accepts `query` (case-insensitive substring filter), `group_by` (`domain`, `window`, or `none`), and `duplicates_only` (show only duplicate tabs). Read-only — never closes anything.
+- [close_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/close-tabs.tool.js): Close Chrome tabs by one of three selection modes: explicit `tab_ids` (array of numbers), `match` (case-insensitive substring against title or URL), or `duplicates: true` (every tab sharing a URL with an earlier one). Supports `dry_run: true` to preview without closing. Exactly one selection mode required.
+
+## Architecture
+
+- [Extension bridge](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/bridge.js): WebSocket bridge implementing owner/follower self-organization. One host binds port 9876 (owner), others proxy through it (followers). Jittered retry on owner death prevents thundering herd. Calls park for up to 3.5s during failover.
+- [Extension service worker](https://github.com/jamubc/2manytabs-mcp/blob/main/extension/background.js): MV3 background script. Opens WebSocket to `ws://127.0.0.1:9876`, dispatches `query_tabs` and `close_tabs` actions, reconnects every 30s via `chrome.alarms`.
+- [Host entry point](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/host.js): MCP server bootstrap using `@modelcontextprotocol/sdk`. Registers tools from the `tools/` registry and connects over stdio.
+
+## Tab helpers
+
+- [tabs.js](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/lib/tabs.js): Pure helper functions shared by both tools — `domainOf`, `matchesQuery`, `findDuplicateIds`, `domainHistogram`, `groupByDomain`, `groupByWindow`, `compact`. Side-effect-free; all selection and grouping logic lives here so the extension stays thin.
+
+## Optional
+
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk): The `@modelcontextprotocol/sdk` (^1.29.0) used for tool registration, JSON Schema generation from Zod schemas, and stdio transport.
+- [Zod](https://zod.dev): Runtime schema validation library (^4.4.3) used for tool input parsing.
