@@ -1,0 +1,25 @@
+# Ignore local dev launcher
+host
+
+# Ignore testing directory
+test/
+
+# Ignore logs
+*.log
+npm-debug.log*
+
+# Ignore system metadata
+.DS_Store
+.DS_Store?
+._*
+
+# Ignore dependencies
+node_modules/
+package-lock.json
+
+# Ignore root configs
+.gitignore
+.npmignore
+
+# Ignore markdown documentation files
+*.md

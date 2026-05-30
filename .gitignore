@@ -1,0 +1,24 @@
+# Dependency directories
+node_modules/
+/native-host/node_modules/
+
+# Release archives
+/releases/
+
+# Dynamically generated launcher wrapper (created by install.sh)
+/native-host/host
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
