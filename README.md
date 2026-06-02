@@ -12,7 +12,7 @@
 
 </div>
 
-> List, group, deduplicate, and bulk-close browser tabs with natural language — from any MCP client.
+> List, group, deduplicate, and bulk-close browser tabs with natural language, from any MCP client.
 
 A Chrome extension acts as a thin proxy for `chrome.tabs`. A Node.js MCP host handles all the logic (filtering, grouping, dedup) and talks to your AI client over stdio. Everything runs locally on loopback.
 
@@ -39,7 +39,7 @@ Firefox and Safari are planned.
 
 ## Step 1 · Install the MCP Host
 
-Pick your client below. They all run the same server — just different config locations.
+Pick your client below. They all run the same server, just different config locations.
 
 ### Verified Clients
 
@@ -180,7 +180,7 @@ Config lives at `~/.hermes/config.yaml` under the `mcp` section.
 
 ### Should Also Work
 
-These clients support MCP but we haven't tested them directly. The same JSON config block should work — just drop it into the client's MCP config file:
+These clients support MCP but we haven't tested them directly. The same JSON config block should work, just drop it into the client's MCP config file:
 
 | Client | Notes |
 |---|---|
@@ -188,7 +188,7 @@ These clients support MCP but we haven't tested them directly. The same JSON con
 | [ChatGPT](https://platform.openai.com/docs/mcp) | MCP connectors exist; local stdio flow unverified |
 | [Sourcegraph Cody](https://sourcegraph.com/cody) | MCP via OpenCTX; setup syntax unverified |
 | [Genkit](https://firebase.google.com/products/genkit) | `genkitx-mcp` plugin can consume MCP servers |
-| [Zed](https://zed.dev/) | Tool support is experimental — prompts/resources only in some builds |
+| [Zed](https://zed.dev/) | Tool support is experimental (prompts/resources only in some builds) |
 
 If your client speaks MCP over stdio, it will work. Point it at `npx -y 2manytabs-mcp-host` and you're set.
 
@@ -200,7 +200,7 @@ If your client speaks MCP over stdio, it will work. Point it at `npx -y 2manytab
 2. Enable **Developer mode** (toggle in the top-right)
 3. Click **Load unpacked**
 4. Select the `extension/` directory from this repo (or the unzipped release)
-5. Click the extension icon in the toolbar — the popup should show **Connected** once the host is running
+5. Click the extension icon in the toolbar; the popup should show **Connected** once the host is running
 
 ---
 
@@ -222,11 +222,11 @@ The host exposes two tools:
 
 ### `list_tabs`
 
-Read-only. Returns a domain histogram with proportional bars and a per-domain listing with titles, pinned (📌), and audible (🔊) flags.
+Read-only. Returns a domain histogram with proportional bars and a per-domain listing with titles, pinned, and audible flags.
 
 | Param | Type | Default | Description |
 |---|---|---|---|
-| `query` | string | — | Substring filter on title or URL |
+| `query` | string | - | Substring filter on title or URL |
 | `group_by` | `"domain"` · `"window"` · `"none"` | `"domain"` | How to group results |
 | `duplicates_only` | boolean | `false` | Show only duplicate URLs |
 
@@ -260,7 +260,7 @@ Opens new tabs in the browser.
                       Follower Hosts
 ```
 
-- The extension is a thin proxy — `query` and `close` only. All logic lives in the host, so new capabilities ship without an extension update.
+- The extension is a thin proxy (`query` and `close` only). All logic lives in the host, so new capabilities ship without an extension update.
 - Multiple AI clients can share one browser. Hosts self-organize: one binds port 9876 (owner), the rest proxy through it (followers). On owner death, followers re-elect automatically.
 - The extension reconnects via `chrome.alarms` every 30s (MV3 idle behavior).
 
@@ -268,9 +268,9 @@ Opens new tabs in the browser.
 
 ## Security
 
-- **Loopback only** — the server binds to `127.0.0.1`, not `0.0.0.0`.
-- **Origin validation** — only `chrome-extension://` origins can connect. Web pages attempting loopback attacks get rejected with a `4003` close code.
-- **No cloud, no daemon** — everything stays on your machine.
+- **Loopback only**: the server binds to `127.0.0.1`, not `0.0.0.0`.
+- **Origin validation**: only `chrome-extension://` origins can connect. Web pages attempting loopback attacks get rejected with a `4003` close code.
+- **No cloud, no daemon**: everything stays on your machine.
 
 ---
 
@@ -285,4 +285,4 @@ For a local dev setup, clone the repo and run `bash install.sh`.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
