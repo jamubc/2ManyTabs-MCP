@@ -3,7 +3,7 @@
 
 <div align="center">
 
-<img src="extension/icon.png" width="120" height="120" style="border-radius: 20px; margin-bottom: 10px;" alt="2ManyTabs MCP Logo" />
+<img src="extension/public/icon.png" width="120" height="120" style="border-radius: 20px; margin-bottom: 10px;" alt="2ManyTabs MCP Logo" />
 
 [![GitHub Release](https://img.shields.io/github/v/release/jamubc/2manytabs-mcp?logo=github&label=GitHub)](https://github.com/jamubc/2manytabs-mcp/releases)
 [![npm version](https://img.shields.io/npm/v/2manytabs-mcp-host)](https://www.npmjs.com/package/2manytabs-mcp-host)
@@ -12,21 +12,22 @@
 
 </div>
 
-> List, group, deduplicate, and bulk-close browser tabs with natural language — from any MCP client.
+> List, group, deduplicate, bulk-close, activate, and update browser tabs with natural language — from any MCP client.
 
-A Chrome extension acts as a thin proxy for `chrome.tabs`. A Node.js MCP host handles all the logic (filtering, grouping, dedup) and talks to your AI client over stdio. Everything runs locally on loopback.
+A browser extension (Chrome and Firefox, one source tree built with [WXT](https://wxt.dev)) proxies a fixed set of `browser.tabs`, `browser.tabGroups`, and `browser.scripting` operations. A Node.js MCP host handles all the logic (filtering, grouping, dedup) and talks to your AI client over stdio. Everything runs locally on loopback. Tools that only filter or reshape data from existing browser operations ship without any extension change; adding a genuinely new browser operation requires a new handler in the extension's `dispatch()` (and sometimes a new manifest permission) plus a rebuild/reload.
 
 ## Browsers
 
-Works with any Chromium browser:
+Works with any Chromium browser, and Firefox:
 
 [![Chrome](https://img.shields.io/badge/Chrome-4285F4?logo=googlechrome&logoColor=fff&style=flat-square)](https://www.google.com/chrome/)
 [![Brave](https://img.shields.io/badge/Brave-FF1B2D?logo=brave&logoColor=fff&style=flat-square)](https://brave.com/)
 [![Edge](https://img.shields.io/badge/Edge-0078D7?logo=microsoftedge&logoColor=fff&style=flat-square)](https://www.microsoft.com/edge)
 [![Opera](https://img.shields.io/badge/Opera-FF1B2D?logo=opera&logoColor=fff&style=flat-square)](https://www.opera.com/)
 [![Comet](https://img.shields.io/badge/Comet-886FBF?style=flat-square)](https://www.perplexity.ai/comet)
+[![Firefox](https://img.shields.io/badge/Firefox-FF7139?logo=firefox&logoColor=fff&style=flat-square)](https://www.mozilla.org/firefox/)
 
-Firefox and Safari are planned.
+The extension is built with [WXT](https://wxt.dev), which generates a Chrome MV3 build and a Firefox MV2 build from one source tree — tab groups (Chrome-only) are feature-detected and disabled cleanly on Firefox. Safari is planned.
 
 ---
 
@@ -196,11 +197,45 @@ If your client speaks MCP over stdio, it will work. Point it at `npx -y 2manytab
 
 ## Step 2 · Load the Browser Extension
 
+First build it — the extension is a [WXT](https://wxt.dev) project, so it needs a build step (the native host does not):
+
+```bash
+cd extension
+npm install
+npm run build           # → .output/chrome-mv3/  (Chrome, Brave, Edge, Opera, Comet)
+npm run build:firefox   # → .output/firefox-mv2/  (Firefox)
+```
+
+<details>
+<summary><strong>Chrome / Chromium</strong></summary>
+
 1. Go to `chrome://extensions/` (or `edge://extensions/`, `brave://extensions/`, etc.)
 2. Enable **Developer mode** (toggle in the top-right)
 3. Click **Load unpacked**
-4. Select the `extension/` directory from this repo (or the unzipped release)
+4. Select `extension/.output/chrome-mv3/`
 5. Click the extension icon in the toolbar — the popup should show **Connected** once the host is running
+
+</details>
+
+<details>
+<summary><strong>Firefox</strong></summary>
+
+1. Go to `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on…**
+3. Select `extension/.output/firefox-mv2/manifest.json`
+4. Click the extension icon in the toolbar — the popup should show **Connected** once the host is running
+
+Temporary add-ons are unloaded when Firefox restarts; reload as needed during development. Tab-group tools are unsupported on Firefox (no `tabGroups` API) and fail with a clear error instead of breaking other tools.
+
+</details>
+
+### Extension development
+
+Run from `extension/`:
+
+- `npm run dev` / `npm run dev:firefox` — launches Chrome/Firefox with the extension loaded and hot-reloads on save
+- `npm run build` / `npm run build:firefox` — production build to `.output/<target>/`
+- `npm run zip` / `npm run zip:firefox` — packages a distributable `.zip` for each target
 
 ---
 
@@ -218,7 +253,7 @@ Just talk to your AI client:
 
 ## Tools
 
-The host exposes two tools:
+The host exposes ten tools:
 
 ### `list_tabs`
 
@@ -247,41 +282,106 @@ Opens new tabs in the browser.
 
 | Param | Type | Description |
 |---|---|---|
-| `urls` | string[] | Array of URLs to open |
+| `urls` | string[] | Array of URLs to open. Required. If no protocol is provided, `https://` is prepended automatically. |
+
+### `list_tab_groups`
+
+Read-only. Lists all existing native Chrome Tab Groups in the current browser session, including their IDs, titles, colors, collapsed states, and parent window IDs.
+
+| Param | Type | Description |
+|---|---|---|
+| `title_query` | string | Case-insensitive substring filter for group titles. |
+
+### `group_tabs`
+
+Groups open Chrome tabs into native Chrome Tab Groups. Can create a new group or add tabs to an existing group.
+
+| Param | Type | Description |
+|---|---|---|
+| `tab_ids` | number[] | Array of tab IDs to add to the group. Required. |
+| `group_id` | number | Add to an existing group ID. If omitted, a new group is created. |
+| `title` | string | Title to set on the group (new or existing). |
+| `color` | `"grey"` · `"blue"` · `"red"` · `"yellow"` · `"green"` · `"pink"` · `"purple"` · `"cyan"` · `"orange"` | Color to set on the group (new or existing). |
+
+### `ungroup_tabs`
+
+Removes one or more open Chrome tabs from their current native Tab Groups.
+
+| Param | Type | Description |
+|---|---|---|
+| `tab_ids` | number[] | Array of tab IDs to remove from any groups. Required. |
+
+### `update_tab_group`
+
+Updates properties of an existing native Chrome Tab Group.
+
+| Param | Type | Description |
+|---|---|---|
+| `group_id` | number | The numeric ID of the tab group to update. Required. Obtain from `list_tab_groups` or `list_tabs`. |
+| `title` | string | New title for the group. |
+| `color` | `"grey"` · `"blue"` · `"red"` · `"yellow"` · `"green"` · `"pink"` · `"purple"` · `"cyan"` · `"orange"` | New color for the group. |
+| `collapsed` | boolean | Set `true` to collapse the group, `false` to expand it. |
+
+### `activate_tab`
+
+Brings a specific browser tab to the foreground, activating it and focusing its containing window.
+
+| Param | Type | Description |
+|---|---|---|
+| `tab_id` | number | The numeric ID of the tab to activate. Required. |
+
+### `update_tab`
+
+Modifies properties of an open browser tab: navigate it to a new URL, pin/unpin it, or mute/unmute its audio.
+
+| Param | Type | Description |
+|---|---|---|
+| `tab_id` | number | The numeric ID of the tab to update. Required. |
+| `url` | string | A new URL to navigate the tab to. If no protocol is provided, `https://` is prepended. |
+| `pinned` | boolean | Set `true` to pin the tab, `false` to unpin it. |
+| `muted` | boolean | Set `true` to mute the tab, `false` to unmute it. |
+
+### `get_tab_text`
+
+Read-only. Extracts the plain body text of a loaded browser tab via `chrome.scripting`. Useful for summarization or classification. Fails on restricted internal browser pages (e.g., `chrome://`, `edge://`, or extension pages) or if the tab is not loaded.
+
+| Param | Type | Description |
+|---|---|---|
+| `tab_id` | number | The numeric ID of the tab whose body text to extract. Required. |
 
 ---
 
 ## Architecture
 
 ```
-  AI Client ◄──stdio──► MCP Host ──WebSocket :9876──► Browser Extension
+  AI Client ◄──stdio──► MCP Host ──WebSocket :9876──► Browser Extension (Chrome / Firefox)
                            │
                            ▼
                       Follower Hosts
 ```
 
-- The extension is a thin proxy — `query` and `close` only. All logic lives in the host, so new capabilities ship without an extension update.
+- One extension source tree (`extension/`, built with [WXT](https://wxt.dev)) produces a Chrome MV3 build and a Firefox MV2 build. The extension proxies a fixed set of `browser.tabs`, `browser.tabGroups`, and `browser.scripting` operations (`extension/lib/tab-ops.js`); `browser.tabGroups` has no Firefox equivalent and is feature-detected, failing only the affected tools with a clear error. All selection, filtering, and reshaping logic lives in the host. Tools that only filter or reshape data from an existing browser operation ship with no extension change; adding a genuinely new browser operation requires a new `case` in `dispatch()` (and sometimes a new manifest permission in `wxt.config.ts`) plus a rebuild/reload.
 - Multiple AI clients can share one browser. Hosts self-organize: one binds port 9876 (owner), the rest proxy through it (followers). On owner death, followers re-elect automatically.
-- The extension reconnects via `chrome.alarms` every 30s (MV3 idle behavior).
+- The extension reconnects via `browser.alarms` every 30s (MV3 idle behavior).
+- `native-host/` is browser-agnostic and shared unchanged by both builds — the WXT build step only affects `extension/`; installing or configuring the MCP host is unaffected.
 
 ---
 
 ## Security
 
 - **Loopback only** — the server binds to `127.0.0.1`, not `0.0.0.0`.
-- **Origin validation** — only `chrome-extension://` origins can connect. Web pages attempting loopback attacks get rejected with a `4003` close code.
+- **Origin validation** — only `chrome-extension://` or `moz-extension://` origins can connect. Web pages attempting loopback attacks get rejected with a `4003` close code.
 - **No cloud, no daemon** — everything stays on your machine.
 
 ---
 
 ## Contributing
 
-PRs welcome. Browser support is the biggest gap right now:
+PRs welcome. Safari support is the biggest gap right now:
 
-[![Firefox](https://img.shields.io/badge/Firefox-Planned-FF7139?logo=firefox&logoColor=fff&style=flat-square)](https://www.mozilla.org/firefox/)
 [![Safari](https://img.shields.io/badge/Safari-Planned-000000?logo=safari&logoColor=fff&style=flat-square)](https://www.apple.com/safari/)
 
-For a local dev setup, clone the repo and run `bash install.sh`.
+For a local dev setup: run `bash install.sh` for the MCP host, and see [Extension development](#extension-development) for the browser side.
 
 ## License
 

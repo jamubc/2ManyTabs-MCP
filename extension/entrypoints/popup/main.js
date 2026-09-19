@@ -1,12 +1,12 @@
 async function refresh() {
   const [storage, tabs] = await Promise.all([
-    chrome.storage.local.get(['connected', 'enabled']),
-    chrome.tabs.query({}),
+    browser.storage.local.get(['connected', 'enabled']),
+    browser.tabs.query({}),
   ]);
 
   const enabled = storage.enabled !== false;
   const connected = storage.connected === true;
-  
+
   const pill = document.getElementById('statusPill');
   const text = document.getElementById('statusText');
   const powerToggle = document.getElementById('powerToggle');
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const powerToggle = document.getElementById('powerToggle');
   if (powerToggle) {
     powerToggle.addEventListener('change', (e) => {
-      chrome.storage.local.set({ enabled: e.target.checked });
+      browser.storage.local.set({ enabled: e.target.checked });
       refresh();
     });
   }

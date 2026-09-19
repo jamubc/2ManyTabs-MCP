@@ -1,17 +1,30 @@
-// Pure tab-selection helpers — shared by the list_tabs and close_tabs tools.
-// Keeping these side-effect-free makes the tools easy to reason about and test.
+// Utilities for filtering, grouping, and formatting tab data.
+// All functions are side-effect-free to simplify testing and reasoning.
 
-/** Extract a display domain from a tab URL, tolerating chrome://, file://, blank. */
+/** Maximum number of tabs to include in list operations. */
+export const MAX_TAB_LIST = 1000;
+
+/** Title truncation length for full tab descriptions. */
+export const TITLE_TRUNCATE_FULL = 80;
+
+/** Title truncation length for compact labels. */
+export const TITLE_TRUNCATE_LABEL = 90;
+
+/** Maximum width (in characters) of histogram bars. */
+export const HISTOGRAM_BAR_MAX = 20;
+
+/** Extract a display domain from a tab URL, tolerating chrome://, file://, blank.
+ * Throws on URL parse errors to preserve data integrity visibility. */
 export function domainOf(tab) {
-  try {
-    const u = new URL(tab.url);
-    if (u.protocol === 'chrome:' || u.protocol === 'chrome-extension:') {
-      return `${u.protocol}//${u.hostname || u.pathname.split('/')[0] || ''}`.replace(/\/$/, '');
-    }
-    return u.hostname || '(local)';
-  } catch {
-    return '(unknown)';
+  if (!tab || tab.url == null) {
+    console.error('[domainOf] tab URL is missing or tab is null/undefined:', tab);
+    throw new Error('tab.url is missing or null');
   }
+  const u = new URL(tab.url);
+  if (u.protocol === 'chrome:' || u.protocol === 'chrome-extension:') {
+    return `${u.protocol}//${u.hostname || u.pathname.split('/')[0] || ''}`.replace(/\/$/, '');
+  }
+  return u.hostname || '(local)';
 }
 
 /** Case-insensitive substring match against title OR url. */
@@ -80,13 +93,27 @@ export function groupByWindow(tabs) {
   );
 }
 
-/** Trim a tab to a compact shape for listing (keeps token cost sane at 1000 tabs). */
+/** Return the [Group: …] prefix string for a tab, or '' if ungrouped. */
+export function getGroupPrefix(tab, groupMap) {
+  if (tab.groupId === undefined || tab.groupId === -1) return '';
+  const g = groupMap.get(tab.groupId);
+  return g ? `[Group: ${g.title || 'Group ' + g.id}] ` : '';
+}
+
+/** Tab label truncation helper. */
+export function tabLabel(tab) {
+  const t = tab.title || '(untitled)';
+  return t.length > TITLE_TRUNCATE_LABEL ? t.slice(0, TITLE_TRUNCATE_LABEL - 3) + '…' : t;
+}
+
+/** Trim a tab to a compact shape for listing. */
 export function compact(tab) {
   const title = tab.title ?? '';
   return {
     id: tab.id,
     window: tab.windowId,
-    title: title.length > 80 ? title.slice(0, 77) + '…' : title,
+    group: (tab.groupId !== undefined && tab.groupId !== -1) ? tab.groupId : undefined,
+    title: title.length > TITLE_TRUNCATE_FULL ? title.slice(0, TITLE_TRUNCATE_FULL - 3) + '…' : title,
     url: tab.url ?? '',
     pinned: tab.pinned || undefined,
     audible: tab.audible || undefined,

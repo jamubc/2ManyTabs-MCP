@@ -1,6 +1,6 @@
 // Follower-path test: when the port is already held, a host must become a
 // FOLLOWER and proxy its tool calls through the owner. Run on a scratch port:
-//   MANYTABS_BRIDGE_PORT=19876 node test/follower.mjs
+//   MANYTABS_BRIDGE_PORT=19876 node test/follower.js
 import http from 'http';
 import { WebSocketServer } from 'ws';
 

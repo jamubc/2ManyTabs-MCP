@@ -32,6 +32,9 @@ const PEER_PATH       = '/peer';        // followers connect here; the extension
 const CALL_TIMEOUT_MS = 10_000;
 const ROUTE_GRACE_MS  = 3_500;          // absorb brief owner↔follower failover before erroring
 
+// chrome-extension:// for Chromium builds, moz-extension:// for Firefox.
+const ALLOWED_EXTENSION_ORIGIN_PREFIXES = ['chrome-extension://', 'moz-extension://'];
+
 const EXT_NOT_CONNECTED_MSG =
   'Chrome extension is not connected. Load the 2ManyTabs MCP extension in your browser ' +
   'and confirm its popup shows "Connected".';
@@ -127,8 +130,8 @@ function attemptBind() {
       }
       handlePeerConnection(socket);
     } else {
-      // Extension connections must originate from a chrome-extension:// URI.
-      if (!origin.startsWith('chrome-extension://')) {
+      // Extension connections must originate from a browser-extension URI.
+      if (!ALLOWED_EXTENSION_ORIGIN_PREFIXES.some(prefix => origin.startsWith(prefix))) {
         log(`Rejected extension connection from unauthorized origin: ${origin}`);
         socket.close(4003, 'Unauthorized origin');
         return;

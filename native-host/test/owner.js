@@ -1,6 +1,6 @@
 // Owner-path test: a lone host should bind the port, own the extension, serve
 // its own calls, AND relay a follower's proxied calls. Run on a scratch port:
-//   MANYTABS_BRIDGE_PORT=19876 node test/owner.mjs
+//   MANYTABS_BRIDGE_PORT=19876 node test/owner.js
 import { startBridge, callExtension, isExtensionConnected, bridgeStatus } from '../bridge.js';
 import { WebSocket } from 'ws';
 

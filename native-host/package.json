@@ -14,7 +14,14 @@
     "tools/"
   ],
   "scripts": {
-    "start": "node host.js"
+    "start": "node host.js",
+    "test":  "node --test lib/tabs.test.js lib/background.test.js",
+    "lint":  "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint":     "^9.0.0",
+    "globals":    "^15.0.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

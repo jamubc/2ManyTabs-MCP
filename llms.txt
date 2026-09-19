@@ -1,19 +1,20 @@
 # 2ManyTabs MCP
 
-> Chrome tab management via the Model Context Protocol. List, group, close, and deduplicate browser tabs from any MCP client — Claude Desktop, VS Code/Copilot, Cursor, Windsurf, Continue, Cline, Hermes, and others.
+> Browser tab management via the Model Context Protocol. List, group, close, and deduplicate browser tabs from any MCP client — Claude Desktop, VS Code/Copilot, Cursor, Windsurf, Continue, Cline, Hermes, and others.
 
-Two components: a **Chrome Extension** (MV3 service worker) that proxies `chrome.tabs` calls, and a **Node.js MCP host** that runs over stdio and communicates with the extension over WebSocket port 9876. No daemon, no cloud dependency — everything runs locally on loopback.
+Two components: a **browser extension** (built with [WXT](https://wxt.dev) as one source tree targeting Chrome MV3 and Firefox MV2) that proxies a fixed set of `browser.tabs`, `browser.tabGroups`, and `browser.scripting` operations, and a **Node.js MCP host** that runs over stdio and communicates with the extension over WebSocket port 9876. No daemon, no cloud dependency — everything runs locally on loopback.
 
 Important notes:
-- The extension is a thin proxy (query + close only). All selection, grouping, and dedup logic lives in the MCP host — new capabilities ship without an extension update.
+- The extension proxies a fixed set of browser operations. All selection, filtering, and reshaping logic lives in the MCP host. Tools that only filter or reshape data from an existing browser operation ship without any extension change; adding a genuinely new browser operation requires a new handler in `dispatch()` (and sometimes a new manifest permission) plus a rebuild/reload.
+- `tabGroups` has no Firefox equivalent; it's feature-detected and only the affected tools fail there, with a clear error, not the whole extension.
 - Multiple MCP clients can share the same browser. Host processes self-organize with an owner/follower pattern: one binds port 9876, the rest proxy through it. On owner death, followers re-elect automatically.
-- Requires Chrome (or any Chromium browser), Node >= 18, and an available loopback port 9876.
-- The extension auto-reconnects via `chrome.alarms` every 30 seconds (required by MV3 idle behaviour).
+- Requires Chrome (or any Chromium browser) or Firefox, Node >= 18, and an available loopback port 9876.
+- The extension auto-reconnects via `browser.alarms` every 30 seconds (required by MV3 idle behaviour).
 - Created by jamubc.
 
 ## Install
 
-- [Chrome Extension](https://github.com/jamubc/2manytabs-mcp/tree/main/extension): Load `extension/` as an unpacked extension — open `chrome://extensions`, enable Developer mode, click "Load unpacked", select the directory.
+- [Browser Extension](https://github.com/jamubc/2manytabs-mcp/tree/main/extension): Build with WXT (`cd extension && npm install && npm run build` for Chrome, `npm run build:firefox` for Firefox), then load the unpacked build from `.output/chrome-mv3/` (`chrome://extensions`, Developer mode, "Load unpacked") or `.output/firefox-mv2/` (`about:debugging#/runtime/this-firefox`, "Load Temporary Add-on…").
 - [MCP Host via npx](https://www.npmjs.com/package/2manytabs-mcp-host): Run `npx -y 2manytabs-mcp-host` — no global install needed.
 - [Claude Code](https://github.com/jamubc/2manytabs-mcp): `claude mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host`
 - [Claude Desktop](https://github.com/jamubc/2manytabs-mcp): Add to `claude_desktop_config.json` with command `npx` and args `["-y", "2manytabs-mcp-host"]`.
@@ -29,17 +30,25 @@ Important notes:
 
 - [list_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/list-tabs.tool.js): Read open Chrome tabs. Returns a domain histogram with proportional bars plus a per-domain tab listing showing titles, pinned (📌), and audible (🔊) flags. Accepts `query` (case-insensitive substring filter), `group_by` (`domain`, `window`, or `none`), and `duplicates_only` (show only duplicate tabs). Read-only — never closes anything.
 - [close_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/close-tabs.tool.js): Close Chrome tabs by one of three selection modes: explicit `tab_ids` (array of numbers), `match` (case-insensitive substring against title or URL), or `duplicates: true` (every tab sharing a URL with an earlier one). Supports `dry_run: true` to preview without closing. Exactly one selection mode required.
-- [open_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/open-tabs.tool.js): Open new tabs in the browser given an array of `urls`.
+- [open_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/open-tabs.tool.js): Open new tabs in the browser given an array of `urls`. If no protocol is provided, `https://` is prepended automatically.
+- [list_tab_groups](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/list-tab-groups.tool.js): List all existing native Chrome Tab Groups in the current browser session. Returns IDs, titles, colors, collapsed states, and parent window IDs. Accepts optional `title_query` (case-insensitive substring filter). Read-only.
+- [group_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/group-tabs.tool.js): Group open Chrome tabs into native Chrome Tab Groups. Required: `tab_ids` (array of tab IDs). Optional: `group_id` (add to an existing group; omit to create a new one), `title` (string), `color` (one of: `grey`, `blue`, `red`, `yellow`, `green`, `pink`, `purple`, `cyan`, `orange`).
+- [ungroup_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/ungroup-tabs.tool.js): Remove one or more open Chrome tabs from their current native Tab Groups. Required: `tab_ids` (array of tab IDs).
+- [update_tab_group](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/update-tab-group.tool.js): Update properties of an existing native Chrome Tab Group. Required: `group_id` (number). Optional: `title` (string), `color` (one of: `grey`, `blue`, `red`, `yellow`, `green`, `pink`, `purple`, `cyan`, `orange`), `collapsed` (boolean).
+- [activate_tab](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/activate-tab.tool.js): Bring a specific browser tab to the foreground, activating it and focusing its containing window. Required: `tab_id` (number).
+- [update_tab](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/update-tab.tool.js): Modify properties of an open browser tab. Required: `tab_id` (number). Optional: `url` (string; `https://` prepended if no protocol), `pinned` (boolean), `muted` (boolean).
+- [get_tab_text](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/get-tab-text.tool.js): Extract the plain body text of a loaded browser tab via `browser.scripting`. Required: `tab_id` (number). Fails on restricted internal pages (`chrome://`, `moz-extension://`, extension pages) or if the tab is not loaded. Read-only.
 
 ## Architecture
 
-- [Extension bridge](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/bridge.js): WebSocket bridge implementing owner/follower self-organization. One host binds port 9876 (owner), others proxy through it (followers). Jittered retry on owner death prevents thundering herd. Calls park for up to 3.5s during failover.
-- [Extension service worker](https://github.com/jamubc/2manytabs-mcp/blob/main/extension/background.js): MV3 background script. Opens WebSocket to `ws://127.0.0.1:9876`, dispatches `query_tabs` and `close_tabs` actions, reconnects every 30s via `chrome.alarms`.
+- [Extension bridge](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/bridge.js): WebSocket bridge implementing owner/follower self-organization. One host binds port 9876 (owner), others proxy through it (followers). Jittered retry on owner death prevents thundering herd. Calls park for up to 3.5s during failover. Accepts `chrome-extension://` and `moz-extension://` origins only.
+- [Extension background entrypoint](https://github.com/jamubc/2manytabs-mcp/blob/main/extension/entrypoints/background.js): WXT `defineBackground()` entrypoint (MV3 service worker on Chrome, MV2 background script on Firefox). Opens WebSocket to `ws://127.0.0.1:9876`, dispatches actions including `query_tabs`, `close_tabs`, `open_tabs`, `group_tabs`, `ungroup_tabs`, `query_groups`, `update_group`, `activate_tab`, `update_tab`, `get_tab_text`, and `ping`, reconnects every 30s via `browser.alarms`.
+- [Tab operations](https://github.com/jamubc/2manytabs-mcp/blob/main/extension/lib/tab-ops.js): The `browser.tabs`/`tabGroups`/`scripting` calls the dispatcher above invokes. Feature-detects `tabGroups` for Firefox.
 - [Host entry point](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/host.js): MCP server bootstrap using `@modelcontextprotocol/sdk`. Registers tools from the `tools/` registry and connects over stdio.
 
 ## Tab helpers
 
-- [tabs.js](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/lib/tabs.js): Pure helper functions shared by both tools — `domainOf`, `matchesQuery`, `findDuplicateIds`, `domainHistogram`, `groupByDomain`, `groupByWindow`, `compact`. Side-effect-free; all selection and grouping logic lives here so the extension stays thin.
+- [tabs.js](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/lib/tabs.js): Pure helper functions shared by the read/filter tools — `domainOf`, `matchesQuery`, `findDuplicateIds`, `domainHistogram`, `groupByDomain`, `groupByWindow`, `compact`. Side-effect-free; all selection and grouping logic lives here so the extension stays focused on Chrome API calls.
 
 ## Optional
 

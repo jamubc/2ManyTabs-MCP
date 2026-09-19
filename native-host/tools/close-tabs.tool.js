@@ -2,9 +2,6 @@ import { z } from 'zod';
 import { callExtension } from '../bridge.js';
 import { matchesQuery, findDuplicateIds, domainOf } from '../lib/tabs.js';
 
-// ACT tool. Absorbs the old close_tabs + close_tabs_matching + close_duplicate_tabs.
-// Exactly one selection mode must be supplied. `dry_run` previews without closing —
-// the safe way to verify a bulk close of hundreds of tabs before committing.
 export const closeTabsTool = {
   name: 'close_tabs',
   title: 'Close Tabs',
@@ -54,7 +51,13 @@ export const closeTabsTool = {
       throw new Error(`Use only one selection mode at a time (got: ${modes.join(', ')}).`);
     }
 
-    const all = await callExtension('query_tabs');
+    let all;
+    try {
+      all = await callExtension('query_tabs');
+    } catch (err) {
+      console.error('Failed to fetch tabs:', err);
+      throw new Error('Failed to fetch open tabs from extension.');
+    }
     const byId = new Map(all.map((t) => [t.id, t]));
 
     let targets, reason;
