@@ -4,7 +4,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { startBridge } from './bridge.js';
 import { toolRegistry } from './tools/index.js';
 
-const server = new McpServer({ name: '2manytabs-mcp', version: '2.0.0' });
+const server = new McpServer({ name: '2manytabs-mcp', version: '2.1.0' });
 
 for (const tool of toolRegistry) {
   server.registerTool(
