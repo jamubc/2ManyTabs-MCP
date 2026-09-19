@@ -16,7 +16,9 @@ export default defineConfig({
       'scripting',
       'tabGroups',
     ],
-    host_permissions: ['http://localhost/*', 'http://127.0.0.1/*'],
+    // *://*/* (not <all_urls>) so get_tab_text's scripting.executeScript can
+    // reach ordinary http(s) tabs; it already refuses chrome://-style pages.
+    host_permissions: ['http://localhost/*', 'http://127.0.0.1/*', '*://*/*'],
     // Firefox-only: a permanent add-on id (can't change after first AMO submission)
     // plus the data-collection disclosure AMO requires on new listings. Nothing the
     // extension sees ever leaves the machine - it only talks to the local MCP host

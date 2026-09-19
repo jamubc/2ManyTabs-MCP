@@ -12,6 +12,7 @@ import {
   formatDomainHeader,
   formatWindowHeader,
   formatGroupPrefix,
+  formatIdPrefix,
 } from './rendering.js';
 
 function renderHistogram(histogram) {
@@ -40,7 +41,7 @@ function renderByDomain(tabs, groupMap) {
       const label = tabLabel(t);
       const flags = buildFlags(t);
       const flagStr = formatFlags(flags);
-      lines.push(`    · ${formatGroupPrefix(groupMap, t)}${label}${flagStr}`);
+      lines.push(`    · ${formatIdPrefix(t)}${formatGroupPrefix(groupMap, t)}${label}${flagStr}`);
     }
     lines.push('');
   }
@@ -61,7 +62,7 @@ function renderByWindow(tabs, groupMap) {
       const label = tabLabel(t);
       const flags = buildFlags(t);
       const flagStr = formatFlags(flags);
-      lines.push(`    · ${formatGroupPrefix(groupMap, t)}${label}${flagStr}`);
+      lines.push(`    · ${formatIdPrefix(t)}${formatGroupPrefix(groupMap, t)}${label}${flagStr}`);
     }
     lines.push('');
   }
@@ -79,7 +80,7 @@ function renderFlat(tabs, groupMap) {
         : c.title;
     const flags = buildFlags(c);
     const flagStr = formatFlags(flags);
-    lines.push(`  · ${formatGroupPrefix(groupMap, t)}${label}${flagStr}`);
+    lines.push(`  · ${formatIdPrefix(t)}${formatGroupPrefix(groupMap, t)}${label}${flagStr}`);
   }
 
   return lines;

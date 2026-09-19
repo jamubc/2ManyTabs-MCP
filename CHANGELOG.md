@@ -16,5 +16,7 @@ All notable changes to this project will be documented in this file.
 - README and `llms.txt` updated for the extension's new build step and Firefox install.
 
 ### Fixed
-- Firefox manifest was missing the `tabGroups` permission entirely, so `list_tabs`, `list_tab_groups`, and every group tool failed on Firefox even though `tab-ops.js` already feature-detected `browser.tabGroups` correctly. Firefox 138/139 added a real `tabGroups` API; the permission is now requested on both targets, gated to Firefox 139+ via `strict_min_version`.
-- `open_tabs` blindly prepended `https://` to any URL lacking `http://`/`https://`, mangling non-http schemes like `about:blank`.
+- Tab-group tools failing on Firefox: the manifest was missing the `tabGroups` permission. Now requested on both targets, gated to Firefox 139+.
+- `open_tabs` mangling non-http URLs like `about:blank` by blindly prepending `https://`.
+- `get_tab_text` failing on any real page: `host_permissions` only covered localhost. Added `*://*/*`.
+- `list_tabs` never showing a tab's id, so id-based tools had no way to get one. Listings now lead with `[id:N]`.

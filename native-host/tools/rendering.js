@@ -39,3 +39,10 @@ export function formatGroupPrefix(groupMap, tab) {
   const g = groupMap.get(tab.groupId);
   return g ? `[Group: ${g.title || 'Group ' + g.id}] ` : '';
 }
+
+/** Draw the tab's numeric id - every id-based tool (activate_tab, update_tab,
+ * get_tab_text, group_tabs, ungroup_tabs, close_tabs' tab_ids mode) needs one,
+ * and this is the only place callers can read it from. */
+export function formatIdPrefix(tab) {
+  return `[id:${tab.id}] `;
+}
