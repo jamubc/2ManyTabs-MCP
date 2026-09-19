@@ -52,10 +52,9 @@ export async function openTabs(urls) {
 
   // Create all tabs in parallel
   const createPromises = urls.map(url => {
-    // If URL doesn't have a protocol, prepend https://
-    const finalUrl = (!url.startsWith('http://') && !url.startsWith('https://'))
-      ? `https://${url}`
-      : url;
+    // Only bare domains/paths lack a scheme (e.g. "example.com"); anything
+    // with one already - http(s), about:, chrome:, file:, etc. - passes through.
+    const finalUrl = /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`;
     return browser.tabs.create({ url: finalUrl, active: false });
   });
 

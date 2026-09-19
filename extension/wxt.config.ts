@@ -6,24 +6,28 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: '2ManyTabs MCP',
     description: 'Expose Chrome tabs to AI via MCP – sort 1000 tabs with Claude.',
-    // tabGroups has no Firefox equivalent yet; feature-detected in lib/tab-ops.js,
-    // but we also keep it out of Firefox's permission list entirely.
+    // tabGroups landed in Firefox 138+ (tabs.group/ungroup) and 139+
+    // (tabGroups.query/get/update) - feature-detected in lib/tab-ops.js as a
+    // belt-and-suspenders check, but the permission is real on both browsers now.
     permissions: [
       'tabs',
       'storage',
       'alarms',
       'scripting',
-      ...(browser === 'firefox' ? [] : ['tabGroups']),
+      'tabGroups',
     ],
     host_permissions: ['http://localhost/*', 'http://127.0.0.1/*'],
     // Firefox-only: a permanent add-on id (can't change after first AMO submission)
     // plus the data-collection disclosure AMO requires on new listings. Nothing the
     // extension sees ever leaves the machine - it only talks to the local MCP host
     // over loopback - so this is a straight "none" declaration.
+    // strict_min_version: 139 is required for tabGroups.query/update, which
+    // native-host/tools/list-tabs.tool.js and list-tab-groups.tool.js depend on.
     ...(browser === 'firefox' ? {
       browser_specific_settings: {
         gecko: {
           id: '2manytabs-mcp@jamubc.github.io',
+          strict_min_version: '139.0',
           data_collection_permissions: { required: ['none'] },
         },
       },
