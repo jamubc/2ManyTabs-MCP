@@ -10,7 +10,7 @@
   "files": [
     "host.js",
     "bridge.js",
-    "lib/",
+    "lib/tabs.js",
     "tools/"
   ],
   "scripts": {
