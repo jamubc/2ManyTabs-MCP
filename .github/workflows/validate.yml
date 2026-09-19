@@ -1,0 +1,14 @@
+# Copy this file to .github/workflows/validate.yml in any Jam-Sw repository
+# to enforce the OpenSpec issue/PR format via the org-wide reusable workflow.
+name: OpenSpec
+on:
+  issues:
+    types: [opened, edited]
+  pull_request:
+    types: [opened, edited]
+permissions:
+  issues: write
+  pull-requests: write
+jobs:
+  openspec:
+    uses: Jam-Sw/.github/.github/workflows/validate-openspec.yml@main

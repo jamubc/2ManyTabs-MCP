@@ -1,0 +1,49 @@
+# Gate: native-host tests/lint and both extension builds must pass on every
+# PR and push to main.
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  native-host:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: native-host/package-lock.json
+
+      - run: npm ci
+        working-directory: native-host
+
+      - run: npm run lint
+        working-directory: native-host
+
+      - run: npm test
+        working-directory: native-host
+
+  extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - run: npm ci
+        working-directory: extension
+
+      - run: npm run build
+        working-directory: extension
+
+      - run: npm run build:firefox
+        working-directory: extension
