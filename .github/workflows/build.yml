@@ -33,9 +33,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # WXT needs node:util's parseEnv (Node 20.12+); pinned to 22 to match
+      # local dev. native-host stays on 18.
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: npm
           cache-dependency-path: extension/package-lock.json
 
