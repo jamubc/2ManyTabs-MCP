@@ -117,7 +117,7 @@ export const closeTabsTool = {
     }
 
     const res = await callExtension('close_tabs', {
-      tab_ids: targets.map((t) => t.browser ? `${t.browser}:${t.id}` : t.id),
+      tab_ids: targets.map((t) => t.browserInstance ? `${t.browserInstance}:${t.id}` : t.browser ? `${t.browser}:${t.id}` : t.id),
       browser,
     });
     return JSON.stringify({ dry_run: false, closed: res.closed, reason, by_domain: preview.by_domain, sample: preview.sample }, null, 2);
