@@ -139,7 +139,8 @@ Ask your agent in plain words. Some things to try:
 
 Chrome and Firefox can be connected at the same time. Brave, Edge and Opera use the Chrome build.
 
-## Develop from source
+<details>
+<summary><strong>Interested in developing 2ManyTabs MCP?</strong></summary>
 
 ```shell
 git clone https://github.com/jamubc/2ManyTabs-MCP.git
@@ -149,6 +150,8 @@ cd extension && npm install && npm run build && npm run build:firefox
 ```
 
 `install.sh` installs the server's dependencies. Claude Code picks up the server from `.mcp.json` when you open the repository. Load the extension from `extension/.output/chrome-mv3/` or `extension/.output/firefox-mv2/manifest.json`.
+
+</details>
 
 ## License
 
