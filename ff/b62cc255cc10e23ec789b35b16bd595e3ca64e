@@ -1,0 +1,23 @@
+README.md
+  s_21ac5e5b7bc523::t_b86829a73d5182 2,16-17
+llms.txt
+  s_21ac5e5b7bc523::t_b86829a73d5182 17,19-20,22,31-41,45-48,52
+extension/entrypoints/popup/index.html
+  s_21ac5e5b7bc523::t_b86829a73d5182 292
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ffb62cc255cc10e23ec789b35b16bd595e3ca64e",
+  "prompts": {},
+  "sessions": {
+    "s_21ac5e5b7bc523": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a50636d-404a-44ef-a9a5-29d91e7e3c38",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
