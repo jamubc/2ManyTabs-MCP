@@ -5,8 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [3.0.0] - 2026-09-19
 
 ### Rebrand
-- Rebranded from **2ManyTabs MCP** to **Internet MCP** (`internet-mcp-host` / `internet-mcp`), expanding from tab management to universal live browser control.
-- Maintained backwards-compatible binary alias `2manytabs-mcp`.
+- Rebranded from **2ManyTabs MCP** to **Internet MCP** (new `internet-mcp` command; the npm package stays `2manytabs-mcp-host`), expanding from tab management to universal live browser control.
+- Kept the `2manytabs-mcp` command and the Firefox add-on id unchanged.
+- Ambiguous numeric tab ids are refused when several browsers are connected; tab group tools accept composite ids.
 
 ### Added
 - **Script Injection (`execute_script` tool)**: Run JavaScript code/expressions in any open browser tab, enabling AI agents to extract dynamic DOM elements (images, tables, articles) and automate interactions.

@@ -1,5 +1,5 @@
 {
-  "name": "internet-mcp-host",
+  "name": "2manytabs-mcp-host",
   "version": "3.0.0",
   "description": "Internet MCP — Universal Live Browser MCP Server for Chrome, Firefox, and all open windows & tabs",
   "type": "module",
