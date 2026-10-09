@@ -40,7 +40,7 @@ export const listTabsTool = {
       groups = [];
     }
 
-    const groupMap = new Map((Array.isArray(groups) ? groups : []).map(g => [g.id, g]));
+    const groupMap = new Map((Array.isArray(groups) ? groups : []).map(g => [g.browser ? `${g.browser}:${g.id}` : g.id, g]));
 
     let tabs = all;
     if (query) tabs = tabs.filter((t) => matchesQuery(t, query));

@@ -59,7 +59,8 @@ const extensionClients = new Map();
 const peerClients      = new Set();    // connected follower sockets
 let wireId             = 0;            // id for requests we send to extensions
 const inflight         = new Map();    // wireId -> { socket, resolve, reject, timer }
-const tabClientIndex   = new Map();    // tabId | 'browser:tabId' -> clientId
+const tabClientIndex   = new Map();    // numeric tabId -> Set<clientId>
+const groupClientIndex = new Map();    // numeric groupId -> Set<clientId>
 
 // FOLLOWER state ----------------------------------------------------
 let peerSocket      = null;         // our client connection to the owner
@@ -208,8 +209,11 @@ function handleExtensionConnection(socket, req) {
       }
     }
     // Clean up indexed tab ownership for this client
-    for (const [key, cId] of tabClientIndex.entries()) {
-      if (cId === clientId) tabClientIndex.delete(key);
+    for (const index of [tabClientIndex, groupClientIndex]) {
+      for (const [key, owners] of index) {
+        owners.delete(clientId);
+        if (owners.size === 0) index.delete(key);
+      }
     }
     log(`Extension disconnected: ${name} [${clientId}]. Remaining: ${extensionClients.size}`);
   });
@@ -260,37 +264,87 @@ function getActiveClients() {
   return Array.from(extensionClients.values()).filter(c => c.socket.readyState === WebSocket.OPEN);
 }
 
-function resolveClientForTab(tabId, browserHint) {
+// Which client(s) last reported owning a numeric tab / group id. A Set,
+// because two browsers can hand out the same number.
+function noteOwner(index, id, clientId) {
+  if (!index.has(id)) index.set(id, new Set());
+  index.get(id).add(clientId);
+}
+
+// Turn a tab or group id (12, "12", "firefox:12", "<instanceId>:12") into
+// { client, cleanId }. With several browsers connected a bare number is only
+// accepted when exactly one browser owns it; otherwise we refuse rather than
+// guess, so a close or script never lands in the wrong browser.
+function resolveTarget(rawId, browserHint, index, kind = 'tab') {
   const clients = getActiveClients();
-  if (clients.length === 0) return null;
-  if (clients.length === 1) return { client: clients[0], cleanTabId: typeof tabId === 'string' && tabId.includes(':') ? Number(tabId.split(':')[1]) : Number(tabId) };
+  if (clients.length === 0) throw new Error(EXT_NOT_CONNECTED_MSG);
 
-  // Check composite string ID (e.g. "firefox:42" or "chrome:10")
-  if (typeof tabId === 'string' && tabId.includes(':')) {
-    const [prefix, idStr] = tabId.split(':');
-    const cleanTabId = Number(idStr);
-    const found = clients.find(c => c.browser === prefix.toLowerCase() || c.id === prefix);
-    if (found) return { client: found, cleanTabId };
+  let prefix = null;
+  let idPart = rawId;
+  if (typeof rawId === 'string' && rawId.includes(':')) {
+    const at = rawId.lastIndexOf(':');
+    prefix = rawId.slice(0, at);
+    idPart = rawId.slice(at + 1);
   }
+  const cleanId = Number(idPart);
+  if (!Number.isInteger(cleanId)) throw new Error(`Invalid ${kind} id: ${rawId}`);
 
-  const cleanId = typeof tabId === 'string' ? Number(tabId) : tabId;
-
-  if (browserHint) {
-    const found = clients.find(c => c.browser === browserHint.toLowerCase());
-    if (found) return { client: found, cleanTabId: cleanId };
-  }
-
-  // Lookup in tab index
-  const indexedClientId = tabClientIndex.get(cleanId);
-  if (indexedClientId) {
-    const found = extensionClients.get(indexedClientId);
-    if (found && found.socket.readyState === WebSocket.OPEN) {
-      return { client: found, cleanTabId: cleanId };
+  const want = prefix ?? browserHint;
+  if (want) {
+    const w = want.toLowerCase();
+    const matches = clients.filter((c) => c.id === want || c.browser === w);
+    if (matches.length === 1) return { client: matches[0], cleanId };
+    if (matches.length === 0) {
+      throw new Error(`No connected browser matches "${want}" for ${kind} ${rawId}. Connected: ${clients.map((c) => c.browser).join(', ')}.`);
     }
+    // Two windows/profiles of the same browser: fall through to the owner index.
+    const owners = [...(index.get(cleanId) ?? [])].filter((id) => matches.some((c) => c.id === id));
+    if (owners.length === 1) return { client: extensionClients.get(owners[0]), cleanId };
+    throw new Error(`${kind} ${rawId} is ambiguous across ${matches.length} ${w} instances; use "<instance>:${cleanId}".`);
   }
 
-  // Fallback to first client
-  return { client: clients[0], cleanTabId: cleanId };
+  if (clients.length === 1) return { client: clients[0], cleanId };
+
+  const owners = [...(index.get(cleanId) ?? [])].filter((id) => extensionClients.get(id)?.socket.readyState === WebSocket.OPEN);
+  if (owners.length === 1) return { client: extensionClients.get(owners[0]), cleanId };
+  const hint = clients.map((c) => `"${c.browser}:${cleanId}"`).join(' or ');
+  throw new Error(owners.length > 1
+    ? `${kind} id ${cleanId} exists in more than one browser; use ${hint}.`
+    : `Unknown ${kind} id ${cleanId} with several browsers connected; run list_tabs first or use ${hint}.`);
+}
+
+// Split a list of ids into per-client batches.
+function batchByClient(rawIds, browserHint) {
+  const batches = new Map();
+  for (const rawId of rawIds) {
+    const { client, cleanId } = resolveTarget(rawId, browserHint, tabClientIndex);
+    if (!batches.has(client)) batches.set(client, []);
+    batches.get(client).push(cleanId);
+  }
+  return batches;
+}
+
+async function fanOut(action, params, clients, onItem) {
+  const results = await Promise.allSettled(clients.map((c) => sendToClient(c, action, params)));
+  // Support single mock client echo in integration tests
+  if (clients.length === 1 && results[0].status === 'fulfilled' && !Array.isArray(results[0].value)) {
+    return results[0].value;
+  }
+  const all = [];
+  results.forEach((res, i) => {
+    if (res.status !== 'fulfilled' || !Array.isArray(res.value)) return;
+    for (const item of res.value) {
+      onItem(item, clients[i]);
+      all.push(item);
+    }
+  });
+  return all;
+}
+
+function withoutBrowser(params, extra) {
+  const out = { ...params, ...extra };
+  delete out.browser;
+  return out;
 }
 
 async function routeCall(action, params = {}) {
@@ -300,105 +354,69 @@ async function routeCall(action, params = {}) {
   }
 
   if (action === 'query_tabs') {
-    const results = await Promise.allSettled(
-      clients.map(c => sendToClient(c, action, params))
-    );
-
-    // Support single mock client echo in integration tests
-    if (clients.length === 1 && results[0].status === 'fulfilled' && !Array.isArray(results[0].value)) {
-      return results[0].value;
-    }
-
-    const allTabs = [];
-    for (let i = 0; i < clients.length; i++) {
-      const res = results[i];
-      if (res.status === 'fulfilled' && Array.isArray(res.value)) {
-        const client = clients[i];
-        for (const tab of res.value) {
-          tab.browser = client.browser;
-          tab.browserInstance = client.id;
-          tab.browserName = client.name;
-          allTabs.push(tab);
-          tabClientIndex.set(`${client.browser}:${tab.id}`, client.id);
-          tabClientIndex.set(tab.id, client.id);
-        }
-      }
-    }
-    return allTabs;
+    return fanOut(action, params, clients, (tab, client) => {
+      tab.browser = client.browser;
+      tab.browserInstance = client.id;
+      tab.browserName = client.name;
+      noteOwner(tabClientIndex, tab.id, client.id);
+    });
   }
 
   if (action === 'query_groups') {
-    const results = await Promise.allSettled(
-      clients.map(c => sendToClient(c, action, params))
-    );
-
-    if (clients.length === 1 && results[0].status === 'fulfilled' && !Array.isArray(results[0].value)) {
-      return results[0].value;
-    }
-
-    const allGroups = [];
-    for (let i = 0; i < clients.length; i++) {
-      const res = results[i];
-      if (res.status === 'fulfilled' && Array.isArray(res.value)) {
-        const client = clients[i];
-        for (const grp of res.value) {
-          grp.browser = client.browser;
-          grp.browserInstance = client.id;
-          allGroups.push(grp);
-        }
-      }
-    }
-    return allGroups;
+    return fanOut(action, params, clients, (grp, client) => {
+      grp.browser = client.browser;
+      grp.browserInstance = client.id;
+      noteOwner(groupClientIndex, grp.id, client.id);
+    });
   }
 
-  if (action === 'close_tabs' && Array.isArray(params.tab_ids)) {
-    const clientBatches = new Map();
-    for (const rawId of params.tab_ids) {
-      const target = resolveClientForTab(rawId, params.browser);
-      const client = target?.client || clients[0];
-      const cleanId = target?.cleanTabId ?? Number(rawId);
-      if (!clientBatches.has(client)) clientBatches.set(client, []);
-      clientBatches.get(client).push(cleanId);
+  // Tab groups can't span browsers: every tab (and the target group) must
+  // resolve to one client.
+  if (action === 'group_tabs') {
+    const batches = batchByClient(params.tab_ids, params.browser);
+    let groupTarget = null;
+    if (params.group_id !== undefined) {
+      groupTarget = resolveTarget(params.group_id, params.browser, groupClientIndex, 'group');
+      batches.set(groupTarget.client, batches.get(groupTarget.client) ?? []);
     }
+    if (batches.size > 1) throw new Error('Cannot group tabs from different browsers into one group.');
+    const [[client, ids]] = batches;
+    const res = await sendToClient(client, action, withoutBrowser(params, { tab_ids: ids, group_id: groupTarget?.cleanId }));
+    if (res && typeof res.groupId === 'number') noteOwner(groupClientIndex, res.groupId, client.id);
+    return res;
+  }
 
-    let totalClosed = 0;
-    for (const [client, ids] of clientBatches.entries()) {
-      const res = await sendToClient(client, action, { ...params, tab_ids: ids });
-      if (res && typeof res.closed === 'number') totalClosed += res.closed;
+  if (action === 'update_group') {
+    const { client, cleanId } = resolveTarget(params.group_id, params.browser, groupClientIndex, 'group');
+    return sendToClient(client, action, withoutBrowser(params, { group_id: cleanId }));
+  }
+
+  // Batched across browsers, results summed (close_tabs, ungroup_tabs).
+  if (Array.isArray(params.tab_ids)) {
+    const sumKey = action === 'close_tabs' ? 'closed' : action === 'ungroup_tabs' ? 'ungrouped' : null;
+    const batches = batchByClient(params.tab_ids, params.browser);
+    if (!sumKey && batches.size > 1) throw new Error(`${action} cannot span browsers.`);
+    let total = 0;
+    let last;
+    for (const [client, ids] of batches) {
+      last = await sendToClient(client, action, withoutBrowser(params, { tab_ids: ids }));
+      if (sumKey && typeof last?.[sumKey] === 'number') total += last[sumKey];
     }
-    return { closed: totalClosed };
+    return sumKey ? { ...last, [sumKey]: total } : last;
   }
 
   if (params.tab_id !== undefined) {
-    const target = resolveClientForTab(params.tab_id, params.browser);
-    const client = target?.client || clients[0];
-    const cleanParams = { ...params, tab_id: target?.cleanTabId ?? params.tab_id };
-    delete cleanParams.browser;
-    return sendToClient(client, action, cleanParams);
-  }
-
-  if (params.tab_ids !== undefined) {
-    const target = resolveClientForTab(params.tab_ids[0], params.browser);
-    const client = target?.client || clients[0];
-    const cleanIds = params.tab_ids.map(id => {
-      const t = resolveClientForTab(id, params.browser);
-      return t?.cleanTabId ?? id;
-    });
-    const cleanParams = { ...params, tab_ids: cleanIds };
-    delete cleanParams.browser;
-    return sendToClient(client, action, cleanParams);
+    const { client, cleanId } = resolveTarget(params.tab_id, params.browser, tabClientIndex);
+    return sendToClient(client, action, withoutBrowser(params, { tab_id: cleanId }));
   }
 
   if (params.browser) {
-    const match = clients.find(c => c.browser === params.browser.toLowerCase());
-    if (match) {
-      const cleanParams = { ...params };
-      delete cleanParams.browser;
-      return sendToClient(match, action, cleanParams);
-    }
+    const match = clients.find(c => c.browser === params.browser.toLowerCase() || c.id === params.browser);
+    if (!match) throw new Error(`No connected browser matches "${params.browser}".`);
+    return sendToClient(match, action, withoutBrowser(params));
   }
 
-  // Default to first client
+  // No target given (e.g. open_tabs without a browser): first connected browser.
   return sendToClient(clients[0], action, params);
 }
 

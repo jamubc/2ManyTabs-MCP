@@ -5,7 +5,7 @@ export const listTabGroupsTool = {
   name: 'list_tab_groups',
   title: 'List Tab Groups',
   description:
-    'List all existing native Chrome Tab Groups in the current browser session. ' +
+    'List all existing native tab groups across all connected browsers. ' +
     'Returns their IDs, titles, colors, collapsed states, and parent window IDs.',
   annotations: { readOnlyHint: true, openWorldHint: true },
   inputSchema: {
@@ -38,7 +38,7 @@ export const listTabGroupsTool = {
     for (const g of filtered) {
       const titleStr = g.title ? `"${g.title}"` : '(unnamed)';
       const collapsedStr = g.collapsed ? ' ⏸ (collapsed)' : ' ▶ (expanded)';
-      lines.push(`  · [ID: ${g.id}] ${titleStr} [Color: ${g.color}] [Window: ${g.windowId}]${collapsedStr}`);
+      lines.push(`  · [ID: ${g.browser ? `${g.browser}:${g.id}` : g.id}] ${titleStr} [Color: ${g.color}] [Window: ${g.windowId}]${collapsedStr}`);
     }
 
     return lines.join('\n');

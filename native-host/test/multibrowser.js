@@ -15,6 +15,8 @@ startBridge();
 await sleep(300);
 assert(bridgeStatus().role === 'owner', 'lone host became OWNER');
 
+const chromeTabsExtra = [];
+
 // 1. Connect Chrome extension
 const chromeExt = new WebSocket(`ws://127.0.0.1:${PORT}/?browser=chrome&name=Chrome&instance=chrome_inst`, {
   origin: 'chrome-extension://mock-chrome-id',
@@ -28,6 +30,7 @@ chromeExt.on('message', (raw) => {
       result: [
         { id: 10, title: 'Google', url: 'https://google.com', windowId: 1 },
         { id: 11, title: 'CNN', url: 'https://cnn.com', windowId: 1 },
+        ...chromeTabsExtra,
       ],
     }));
   } else if (msg.action === 'execute_script') {
@@ -36,7 +39,7 @@ chromeExt.on('message', (raw) => {
       result: { success: true, result: `Executed in Chrome tab ${msg.tab_id}` },
     }));
   } else {
-    chromeExt.send(JSON.stringify({ id: msg.id, result: { success: true } }));
+    chromeExt.send(JSON.stringify({ id: msg.id, result: msg.action === 'ungroup_tabs' ? { ungrouped: msg.tab_ids.length } : { success: true } }));
   }
 });
 
@@ -65,7 +68,7 @@ firefoxExt.on('message', (raw) => {
       result: { success: true, result: `Executed in Firefox tab ${msg.tab_id}` },
     }));
   } else {
-    firefoxExt.send(JSON.stringify({ id: msg.id, result: { success: true } }));
+    firefoxExt.send(JSON.stringify({ id: msg.id, result: msg.action === 'ungroup_tabs' ? { ungrouped: msg.tab_ids.length } : { success: true } }));
   }
 });
 
@@ -91,6 +94,26 @@ assert(resFirefox?.result === 'Executed in Firefox tab 20', 'Targeted call route
 
 const resChrome = await callExtension('execute_script', { tab_id: 11, script: 'return 2;' });
 assert(resChrome?.result === 'Executed in Chrome tab 11', 'Targeted call auto-routed to Chrome tab 11 via tab cache');
+
+// 4b. Safety: never guess the browser
+let err = null;
+try { await callExtension('execute_script', { tab_id: 999, script: '1' }); } catch (e) { err = e; }
+assert(/Unknown tab id 999/.test(err?.message), 'Unknown bare id with two browsers is refused, not guessed');
+
+// Chrome reuses id 20 (Firefox already owns 20) -> bare 20 is now ambiguous
+await callExtension('query_tabs');
+chromeTabsExtra.push({ id: 20, title: 'Dup', url: 'https://dup.example', windowId: 1 });
+await callExtension('query_tabs');
+err = null;
+try { await callExtension('activate_tab', { tab_id: 20 }); } catch (e) { err = e; }
+assert(/more than one browser/.test(err?.message), 'Bare id owned by two browsers is refused');
+
+err = null;
+try { await callExtension('group_tabs', { tab_ids: ['chrome:10', 'firefox:21'] }); } catch (e) { err = e; }
+assert(/different browsers/.test(err?.message), 'Grouping tabs across browsers is refused');
+
+const ug = await callExtension('ungroup_tabs', { tab_ids: ['chrome:10', 'firefox:21'] });
+assert(ug?.ungrouped === 2, 'ungroup_tabs batches per browser and sums results');
 
 // 5. Disconnect Firefox; Chrome should remain active
 firefoxExt.close();

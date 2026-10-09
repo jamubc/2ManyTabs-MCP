@@ -37,7 +37,7 @@ export function formatWindowHeader(winId, count, browser) {
 /** Draw group prefix. */
 export function formatGroupPrefix(groupMap, tab) {
   if (tab.groupId === undefined || tab.groupId === -1) return '';
-  const g = groupMap.get(tab.groupId);
+  const g = groupMap.get(tab.browser ? `${tab.browser}:${tab.groupId}` : tab.groupId);
   return g ? `[Group: ${g.title || 'Group ' + g.id}] ` : '';
 }
 

@@ -17,6 +17,7 @@
   "scripts": {
     "start": "node host.js",
     "test":  "node --test lib/tabs.test.js lib/background.test.js",
+    "test:multibrowser": "MANYTABS_BRIDGE_PORT=19878 node test/multibrowser.js",
     "lint":  "eslint ."
   },
   "devDependencies": {
