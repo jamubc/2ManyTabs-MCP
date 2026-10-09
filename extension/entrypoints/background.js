@@ -61,6 +61,11 @@ export default defineBackground(() => {
       let msg;
       try { msg = JSON.parse(event.data); } catch { return; }
 
+      if (msg.type === 'status') {
+        browser.storage.local.set({ peers: { self: msg.self, agents: msg.agents, browsers: msg.browsers } });
+        return;
+      }
+
       let result, error;
       try {
         result = await dispatch(msg);
@@ -75,7 +80,7 @@ export default defineBackground(() => {
   }
 
   function setStatus(connected) {
-    browser.storage.local.set({ connected, lastUpdate: Date.now() });
+    browser.storage.local.set({ connected, lastUpdate: Date.now(), ...(connected ? {} : { peers: null }) });
   }
 
   // -------------------------------------------------------------------------
