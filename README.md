@@ -21,101 +21,21 @@ claude mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
 Using another client? Open yours:
 
 <details>
-<summary><strong>Claude Desktop</strong></summary>
+<summary><strong>Codex</strong></summary>
 
-Add this to your config file, then restart Claude Desktop.
-
-| OS | Path |
-|---|---|
-| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
-| Linux | `~/.config/claude/claude_desktop_config.json` |
-
-```json
-{
-  "mcpServers": {
-    "2manytabs-mcp": {
-      "command": "npx",
-      "args": ["-y", "2manytabs-mcp-host"]
-    }
-  }
-}
+```shell
+codex mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
 ```
 </details>
 
 <details>
 <summary><strong>VS Code / GitHub Copilot</strong></summary>
 
-Create `.vscode/mcp.json` in your workspace, or run **MCP: Open User Configuration** for all workspaces:
-
-```json
-{
-  "servers": {
-    "2manytabs-mcp": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "2manytabs-mcp-host"]
-    }
-  }
-}
+```shell
+code --add-mcp '{"name":"2manytabs-mcp","command":"npx","args":["-y","2manytabs-mcp-host"]}'
 ```
-</details>
 
-<details>
-<summary><strong>Cursor</strong></summary>
-
-Open **Settings → MCP** and add a new server, or edit `.cursor/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "2manytabs-mcp": {
-      "command": "npx",
-      "args": ["-y", "2manytabs-mcp-host"]
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Windsurf</strong></summary>
-
-Open **Settings → Cascade → MCP**, or edit `mcp_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "2manytabs-mcp": {
-      "command": "npx",
-      "args": ["-y", "2manytabs-mcp-host"]
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Continue</strong></summary>
-
-Add to `.continue/config.json`, or create `.continue/mcpServers/2manytabs-mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "2manytabs-mcp": {
-      "command": "npx",
-      "args": ["-y", "2manytabs-mcp-host"]
-    }
-  }
-}
-```
-</details>
-
-<details>
-<summary><strong>Cline</strong></summary>
-
-Open the **MCP Servers** panel and add a server with command `npx` and args `-y 2manytabs-mcp-host`.
+This adds it to your user profile.
 </details>
 
 <details>
@@ -123,14 +43,19 @@ Open the **MCP Servers** panel and add a server with command `npx` and args `-y 
 
 ```shell
 hermes mcp add 2manytabs-mcp --command "npx -y 2manytabs-mcp-host"
-hermes mcp test 2manytabs-mcp
 ```
 </details>
 
 <details>
 <summary><strong>OpenClaw</strong></summary>
 
-Add this to your OpenClaw MCP configuration:
+Open **Settings → MCP**, choose **Add server**, pick **Stdio**, and enter the command `npx` with the arguments `-y 2manytabs-mcp-host`.
+</details>
+
+<details>
+<summary><strong>Claude Desktop, Cursor, Windsurf, Cline, Continue, Gemini CLI</strong></summary>
+
+Add this to the client's MCP config file, then restart the client:
 
 ```json
 {
@@ -142,6 +67,15 @@ Add this to your OpenClaw MCP configuration:
   }
 }
 ```
+
+| Client | Config file |
+|---|---|
+| Claude Desktop | macOS `~/Library/Application Support/Claude/claude_desktop_config.json`, Windows `%APPDATA%\Claude\claude_desktop_config.json`, Linux `~/.config/claude/claude_desktop_config.json` |
+| Cursor | `~/.cursor/mcp.json`, or `.cursor/mcp.json` in a project |
+| Windsurf | `mcp_config.json`, opened from **Settings → Cascade → MCP** |
+| Cline | `cline_mcp_settings.json`, opened from the **MCP Servers** panel |
+| Continue | `.continue/mcpServers/2manytabs-mcp.json` |
+| Gemini CLI | `~/.gemini/settings.json`, or `.gemini/settings.json` in a project |
 </details>
 
 Any other client that runs MCP servers over stdio works with the command `npx -y 2manytabs-mcp-host`.
