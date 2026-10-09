@@ -155,9 +155,7 @@ export async function updateTab(tabId, url, pinned, muted) {
 
   const updateObj = {};
   if (url !== undefined) {
-    updateObj.url = (!url.startsWith('http://') && !url.startsWith('https://'))
-      ? `https://${url}`
-      : url;
+    updateObj.url = /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`;
   }
   if (pinned !== undefined) updateObj.pinned = pinned;
   if (muted !== undefined) updateObj.muted = muted;
