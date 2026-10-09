@@ -2,19 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## [3.0.0] - 2026-09-19
+## [3.0.0] - 2026-10-09
 
 ### Rebrand
-- Rebranded from **2ManyTabs MCP** to **Internet MCP** (new `internet-mcp` command; the npm package stays `2manytabs-mcp-host`), expanding from tab management to universal live browser control.
-- Kept the `2manytabs-mcp` command and the Firefox add-on id unchanged.
-- Ambiguous numeric tab ids are refused when several browsers are connected; tab group tools accept composite ids.
+- Renamed from **2ManyTabs MCP** to **Internet MCP**, and the repository to `jamubc/internet-mcp` (GitHub redirects the old address). The npm package stays `2manytabs-mcp-host` so existing installs update, and it adds an `internet-mcp` command next to `2manytabs-mcp`. The Firefox add-on id is unchanged.
 
 ### Added
-- **Script Injection (`execute_script` tool)**: Run JavaScript code/expressions in any open browser tab, enabling AI agents to extract dynamic DOM elements (images, tables, articles) and automate interactions.
-- **Multi-Browser Concurrency**: Upgraded WebSocket bridge to an active client registry. Multiple browsers (Chrome + Firefox) and multiple profiles/windows can run simultaneously without collisions or disconnect drops.
-- Composite tab ID addressing (`chrome:12`, `firefox:34`) and automatic tab ownership routing.
-- Multi-browser summary and window headers in `list_tabs`.
-- Integration tests in `test/multibrowser.js`.
+- **Several browsers at once.** Chrome and Firefox (and several profiles) can connect together. Tabs carry ids like `chrome:12` and `firefox:34`, and every call goes to the browser that owns the tab.
+- **`execute_script`** runs JavaScript in a Firefox tab and returns the result. Chrome tabs get a clear error, because Chrome's extension rules block running script text.
+- **A live connection map in the extension popup.** It shows each connected agent and browser, highlights the browser you are in, and lights the path of every real call as it happens, with the last call and how long ago it was.
+- `list_tabs` groups windows by browser and summarises counts per browser.
+- `.mcp.json` registers the local server, so Claude Code sees it in this repository after a one-time approval.
+
+### Changed
+- A bare tab id is used only when exactly one connected browser owns it; otherwise the call is refused with the ids to use instead, so nothing lands in the wrong browser.
+- Tab group tools accept `browser:id` ids, and grouping tabs from different browsers is refused.
 
 ## [2.1.0] - 2026-09-19
 
