@@ -199,7 +199,9 @@ function handleExtensionConnection(socket, req) {
   });
 
   socket.on('close', () => {
-    extensionClients.delete(clientId);
+    // A reconnect with the same instance id replaces this entry; leave the live one alone.
+    const replaced = extensionClients.has(clientId) && extensionClients.get(clientId).socket !== socket;
+    if (!replaced) extensionClients.delete(clientId);
     // Reject any in-flight requests that were waiting on this socket
     for (const [id, d] of inflight.entries()) {
       if (d.socket === socket) {
@@ -209,11 +211,8 @@ function handleExtensionConnection(socket, req) {
       }
     }
     // Clean up indexed tab ownership for this client
-    for (const index of [tabClientIndex, groupClientIndex]) {
-      for (const [key, owners] of index) {
-        owners.delete(clientId);
-        if (owners.size === 0) index.delete(key);
-      }
+    if (!replaced) {
+      for (const index of [tabClientIndex, groupClientIndex]) forgetClient(index, clientId);
     }
     log(`Extension disconnected: ${name} [${clientId}]. Remaining: ${extensionClients.size}`);
   });
@@ -262,6 +261,13 @@ function sendToClient(client, action, params = {}) {
 
 function getActiveClients() {
   return Array.from(extensionClients.values()).filter(c => c.socket.readyState === WebSocket.OPEN);
+}
+
+function forgetClient(index, clientId) {
+  for (const [key, owners] of index) {
+    owners.delete(clientId);
+    if (owners.size === 0) index.delete(key);
+  }
 }
 
 // Which client(s) last reported owning a numeric tab / group id. A Set,
