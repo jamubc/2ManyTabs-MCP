@@ -21,6 +21,14 @@ claude mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
 Using another client? Open yours:
 
 <details>
+<summary><strong>Antigravity CLI (agy)</strong></summary>
+
+```shell
+agy mcp add 2manytabs-mcp npx -y 2manytabs-mcp-host
+```
+</details>
+
+<details>
 <summary><strong>Codex</strong></summary>
 
 ```shell
@@ -42,7 +50,7 @@ This adds it to your user profile.
 <summary><strong>Hermes Agent</strong></summary>
 
 ```shell
-hermes mcp add 2manytabs-mcp --command "npx -y 2manytabs-mcp-host"
+hermes mcp add 2manytabs-mcp --command npx --args -y 2manytabs-mcp-host
 ```
 </details>
 
@@ -75,7 +83,7 @@ Add this to the client's MCP config file, then restart the client:
 | Windsurf | `mcp_config.json`, opened from **Settings → Cascade → MCP** |
 | Cline | `cline_mcp_settings.json`, opened from the **MCP Servers** panel |
 | Continue | `.continue/mcpServers/2manytabs-mcp.json` |
-| Gemini CLI | `~/.gemini/settings.json`, or `.gemini/settings.json` in a project |
+| Gemini CLI (enterprise) | `~/.gemini/settings.json`, or `.gemini/settings.json` in a project |
 </details>
 
 Any other client that runs MCP servers over stdio works with the command `npx -y 2manytabs-mcp-host`.
