@@ -63,7 +63,7 @@ globalThis.WebSocket = class {
 // Import after globals are set
 // ---------------------------------------------------------------------------
 
-let groupTabs, updateGroup, updateTab, getTabText;
+let groupTabs, updateGroup, updateTab, getTabText, executeScript;
 
 before(async () => {
   const bg = await import('../../extension/lib/tab-ops.js');
@@ -71,6 +71,7 @@ before(async () => {
   updateGroup = bg.updateGroup;
   updateTab = bg.updateTab;
   getTabText = bg.getTabText;
+  executeScript = bg.executeScript;
 });
 
 // ---------------------------------------------------------------------------
@@ -218,3 +219,49 @@ describe('getTabText', () => {
     assert.equal(result.text, '');
   });
 });
+
+// ---------------------------------------------------------------------------
+// executeScript
+// ---------------------------------------------------------------------------
+
+describe('executeScript', () => {
+  it('throws when tabId is not a number', async () => {
+    await assert.rejects(() => executeScript('1', 'return 1;'), /numeric tab ID/);
+  });
+
+  it('throws when script is not a non-empty string', async () => {
+    await assert.rejects(() => executeScript(1, ''), /non-empty script string/);
+  });
+
+  it('throws when tab is not found', async () => {
+    browser.tabs.get = async () => null;
+    await assert.rejects(() => executeScript(999, 'return 1;'), /not found/);
+  });
+
+  it('throws for restricted chrome:// URLs', async () => {
+    browser.tabs.get = async () => ({ url: 'chrome://extensions' });
+    await assert.rejects(() => executeScript(1, 'return 1;'), /restricted/);
+  });
+
+  it('throws for restricted about: URLs', async () => {
+    browser.tabs.get = async () => ({ url: 'about:config' });
+    await assert.rejects(() => executeScript(1, 'return 1;'), /restricted/);
+  });
+
+  it('executes and returns serialized result', async () => {
+    browser.tabs.get = async () => ({ url: 'https://example.com' });
+    browser.scripting.executeScript = async () => [{ result: { success: true, result: ['img1.png', 'img2.png'] } }];
+    const res = await executeScript(1, 'Array.from(document.images).map(i => i.src)');
+    assert.equal(res.success, true);
+    assert.deepEqual(res.result, ['img1.png', 'img2.png']);
+  });
+
+  it('propagates execution errors returned from func', async () => {
+    browser.tabs.get = async () => ({ url: 'https://example.com' });
+    browser.scripting.executeScript = async () => [{ result: { success: false, error: 'ReferenceError: foo is not defined' } }];
+    const res = await executeScript(1, 'foo.bar()');
+    assert.equal(res.success, false);
+    assert.match(res.error, /ReferenceError/);
+  });
+});
+

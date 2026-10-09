@@ -4,8 +4,8 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   srcDir: '.',
   manifest: ({ browser }) => ({
-    name: '2ManyTabs MCP',
-    description: 'Expose Chrome tabs to AI via MCP – sort 1000 tabs with Claude.',
+    name: 'Internet MCP',
+    description: 'Bridge your live browser to AI via MCP — run scripts, triage tabs, inspect and automate across Chrome & Firefox.',
     // tabGroups landed in Firefox 138+ (tabs.group/ungroup) and 139+
     // (tabGroups.query/get/update) - feature-detected in lib/tab-ops.js as a
     // belt-and-suspenders check, but the permission is real on both browsers now.
@@ -16,8 +16,8 @@ export default defineConfig({
       'scripting',
       'tabGroups',
     ],
-    // *://*/* (not <all_urls>) so get_tab_text's scripting.executeScript can
-    // reach ordinary http(s) tabs; it already refuses chrome://-style pages.
+    // *://*/* (not <all_urls>) so scripting.executeScript can reach ordinary
+    // http(s) tabs; it already refuses chrome://-style pages.
     host_permissions: ['http://localhost/*', 'http://127.0.0.1/*', '*://*/*'],
     // Firefox-only: a permanent add-on id (can't change after first AMO submission)
     // plus the data-collection disclosure AMO requires on new listings. Nothing the
@@ -28,7 +28,7 @@ export default defineConfig({
     ...(browser === 'firefox' ? {
       browser_specific_settings: {
         gecko: {
-          id: '2manytabs-mcp@jamubc.github.io',
+          id: 'internet-mcp@jamubc.github.io',
           strict_min_version: '139.0',
           data_collection_permissions: { required: ['none'] },
         },
@@ -41,7 +41,7 @@ export default defineConfig({
     },
     action: {
       default_popup: 'popup.html',
-      default_title: '2ManyTabs MCP',
+      default_title: 'Internet MCP',
       default_icon: {
         16: 'icon16.png',
         48: 'icon48.png',

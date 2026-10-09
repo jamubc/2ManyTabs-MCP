@@ -41,6 +41,16 @@ describe('domainOf', () => {
     assert.equal(result, 'chrome-extension://abcdefg');
   });
 
+  it('handles moz-extension:// URLs', () => {
+    const result = domainOf({ url: 'moz-extension://1234-5678/popup.html' });
+    assert.equal(result, 'moz-extension://1234-5678');
+  });
+
+  it('handles about: URLs', () => {
+    const result = domainOf({ url: 'about:debugging#/runtime/this-firefox' });
+    assert.equal(result, 'about://debugging');
+  });
+
   it('throws on invalid URL', () => {
     assert.throws(() => domainOf({ url: 'not-a-url' }), Error);
   });

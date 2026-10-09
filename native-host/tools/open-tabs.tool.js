@@ -22,14 +22,16 @@ export const openTabsTool = {
   inputSchema: {
     urls: z.array(z.string()).min(1)
       .describe('An array of URLs to open. If no protocol is provided, https:// will be prepended automatically.'),
+    browser: z.string().optional()
+      .describe('Target browser to open tabs in (e.g. "chrome", "firefox"). Defaults to the active browser.'),
   },
 
-  execute: async ({ urls }) => {
+  execute: async ({ urls, browser }) => {
     if (!urls || urls.length === 0) {
       throw new Error('Provide at least one URL to open.');
     }
 
-    const res = await callExtension('open_tabs', { urls });
+    const res = await callExtension('open_tabs', { urls, browser });
     return JSON.stringify({ opened: res.opened }, null, 2);
   },
 };

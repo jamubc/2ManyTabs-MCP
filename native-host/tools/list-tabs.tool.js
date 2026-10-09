@@ -23,20 +23,24 @@ export const listTabsTool = {
         "'window' groups by browser window; 'none' returns a flat list."),
     duplicates_only: z.boolean().default(false)
       .describe('Only include tabs that are duplicates (share a URL with an earlier tab).'),
+    browser: z.string().optional()
+      .describe('Filter tabs to a specific browser (e.g. "chrome", "firefox"). Omit to list tabs across all open browsers.'),
   },
 
-  execute: async ({ query, group_by, duplicates_only }) => {
-    const all = await callExtension('query_tabs');
-
-    let groups;
-    try {
-      groups = await callExtension('query_groups');
-    } catch (err) {
-      console.error('Failed to fetch tab groups:', err);
-      throw new Error('Failed to fetch tab groups from extension.');
+  execute: async ({ query, group_by, duplicates_only, browser }) => {
+    let all = await callExtension('query_tabs');
+    if (browser) {
+      all = all.filter((t) => (t.browser || '').toLowerCase() === browser.toLowerCase());
     }
 
-    const groupMap = new Map(groups.map(g => [g.id, g]));
+    let groups = [];
+    try {
+      groups = await callExtension('query_groups');
+    } catch {
+      groups = [];
+    }
+
+    const groupMap = new Map((Array.isArray(groups) ? groups : []).map(g => [g.id, g]));
 
     let tabs = all;
     if (query) tabs = tabs.filter((t) => matchesQuery(t, query));
@@ -51,7 +55,7 @@ export const listTabsTool = {
     }
 
     const histogram = domainHistogram(tabs);
-    const windows = new Set(tabs.map((t) => t.windowId)).size;
+    const windows = new Set(tabs.map((t) => t.browser ? `${t.browser}:${t.windowId}` : t.windowId)).size;
     const dupCount = findDuplicateIds(tabs).length;
 
     return formatTabData({

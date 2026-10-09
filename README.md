@@ -1,20 +1,19 @@
-# 2ManyTabs MCP
+# Internet MCP
 <img width="799" height="254" alt="image" src="https://github.com/user-attachments/assets/7ee50e2b-cb51-43b2-b3b4-e87aeb0e21c4" />
 
 <div align="center">
 
-<img src="extension/public/icon.png" width="120" height="120" style="border-radius: 20px; margin-bottom: 10px;" alt="2ManyTabs MCP Logo" />
+<img src="extension/public/icon.png" width="120" height="120" style="border-radius: 20px; margin-bottom: 10px;" alt="Internet MCP Logo" />
 
 [![GitHub Release](https://img.shields.io/github/v/release/jamubc/2manytabs-mcp?logo=github&label=GitHub)](https://github.com/jamubc/2manytabs-mcp/releases)
-[![npm version](https://img.shields.io/npm/v/2manytabs-mcp-host)](https://www.npmjs.com/package/2manytabs-mcp-host)
-[![npm downloads](https://img.shields.io/npm/dt/2manytabs-mcp-host)](https://www.npmjs.com/package/2manytabs-mcp-host)
+[![npm version](https://img.shields.io/npm/v/internet-mcp-host)](https://www.npmjs.com/package/internet-mcp-host)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 </div>
 
-> List, group, deduplicate, bulk-close, activate, and update browser tabs with natural language — from any MCP client.
+> Universal Live Browser MCP Server — connect AI to Chrome, Firefox, and all open windows & tabs. Run scripts in tabs, extract DOM data, triage tabs, and automate across browsers.
 
-A browser extension (Chrome and Firefox, one source tree built with [WXT](https://wxt.dev)) proxies a fixed set of `browser.tabs`, `browser.tabGroups`, and `browser.scripting` operations. A Node.js MCP host handles all the logic (filtering, grouping, dedup) and talks to your AI client over stdio. Everything runs locally on loopback. Tools that only filter or reshape data from existing browser operations ship without any extension change; adding a genuinely new browser operation requires a new handler in the extension's `dispatch()` (and sometimes a new manifest permission) plus a rebuild/reload.
+A browser extension (Chrome and Firefox, one source tree built with [WXT](https://wxt.dev)) connects your live browser to AI via MCP. A Node.js MCP host handles multi-browser aggregation, script execution, grouping, and deduplication, talking to your AI client over stdio. Multiple browsers (Chrome + Firefox) and multiple windows run concurrently without collision. Everything runs locally on loopback.
 
 ## Browsers
 
@@ -243,38 +242,52 @@ Run from `extension/`:
 
 Just talk to your AI client:
 
-- *"Show me all my open tabs."*
+- *"Show me all my open tabs across Chrome and Firefox."*
+- *"Find my CNN tabs and run a script to pull all image URLs."*
 - *"Find and close duplicate tabs."*
-- *"Close everything matching 'youtube'."*
+- *"Close everything matching 'youtube' in Firefox."*
 - *"Do a dry run of closing all tabs from reddit.com."*
-- *"Group my tabs by domain and show the breakdown."*
+- *"Group my Chrome tabs by domain and show the breakdown."*
 
 ---
 
 ## Tools
 
-The host exposes ten tools:
+The host exposes eleven tools:
 
 ### `list_tabs`
 
-Read-only. Returns a domain histogram with proportional bars and a per-domain listing with titles, pinned (📌), and audible (🔊) flags.
+Read-only. Returns a domain histogram with proportional bars and a per-domain listing with titles, pinned (📌), audible (🔊), and browser flags. Aggregates tabs across all connected browsers (Chrome, Firefox, Edge, Brave).
 
 | Param | Type | Default | Description |
 |---|---|---|---|
 | `query` | string | — | Substring filter on title or URL |
 | `group_by` | `"domain"` · `"window"` · `"none"` | `"domain"` | How to group results |
 | `duplicates_only` | boolean | `false` | Show only duplicate URLs |
+| `browser` | string | — | Filter by browser (e.g. `"chrome"`, `"firefox"`). Defaults to all. |
+
+### `execute_script`
+
+Runs a JavaScript expression or script inside the target browser tab and returns serialized JSON output. Ideal for extracting dynamic DOM data (images, links, tables, article bodies) or automating page interactions.
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `tab_id` | number \| string | Required | Target tab ID (e.g. `12` or composite `"chrome:12"`, `"firefox:34"`). |
+| `script` | string | Required | JavaScript expression/code to execute (e.g. `Array.from(document.images).map(i => i.src)`). |
+| `browser` | string | — | Browser hint (`"chrome"`, `"firefox"`) if `tab_id` is ambiguous. |
+| `world` | `"ISOLATED"` · `"MAIN"` | `"ISOLATED"` | Execution context. `"ISOLATED"` has full DOM access; `"MAIN"` accesses page JavaScript objects. |
 
 ### `close_tabs`
 
-Closes tabs. Exactly one selection mode required:
+Closes tabs across connected browsers. Supports numeric IDs, composite IDs (`"chrome:12"`), and optional browser filtering. Exactly one selection mode required:
 
 | Param | Type | Description |
 |---|---|---|
-| `tab_ids` | number[] | Close specific tab IDs |
+| `tab_ids` | (number \| string)[] | Close specific tab IDs |
 | `match` | string | Close tabs matching this substring |
 | `duplicates` | boolean | Close all duplicates (keeps first occurrence) |
 | `dry_run` | boolean | Preview what would close without closing |
+| `browser` | string | Optional browser filter (`"chrome"`, `"firefox"`) |
 
 ### `open_tabs`
 
@@ -283,6 +296,7 @@ Opens new tabs in the browser.
 | Param | Type | Description |
 |---|---|---|
 | `urls` | string[] | Array of URLs to open. Required. If no protocol is provided, `https://` is prepended automatically. |
+| `browser` | string | Optional target browser (`"chrome"`, `"firefox"`). Defaults to active browser. |
 
 ### `list_tab_groups`
 
@@ -328,7 +342,8 @@ Brings a specific browser tab to the foreground, activating it and focusing its 
 
 | Param | Type | Description |
 |---|---|---|
-| `tab_id` | number | The numeric ID of the tab to activate. Required. |
+| `tab_id` | number \| string | The ID of the tab to activate (number or composite like `"chrome:12"`). Required. |
+| `browser` | string | Optional browser hint (`"chrome"`, `"firefox"`). |
 
 ### `update_tab`
 
@@ -336,18 +351,20 @@ Modifies properties of an open browser tab: navigate it to a new URL, pin/unpin 
 
 | Param | Type | Description |
 |---|---|---|
-| `tab_id` | number | The numeric ID of the tab to update. Required. |
+| `tab_id` | number \| string | The ID of the tab to update. Required. |
 | `url` | string | A new URL to navigate the tab to. If no protocol is provided, `https://` is prepended. |
 | `pinned` | boolean | Set `true` to pin the tab, `false` to unpin it. |
 | `muted` | boolean | Set `true` to mute the tab, `false` to unmute it. |
+| `browser` | string | Optional browser hint (`"chrome"`, `"firefox"`). |
 
 ### `get_tab_text`
 
-Read-only. Extracts the plain body text of a loaded browser tab via `chrome.scripting`. Useful for summarization or classification. Fails on restricted internal browser pages (e.g., `chrome://`, `edge://`, or extension pages) or if the tab is not loaded.
+Read-only. Extracts the plain body text of a loaded browser tab via `scripting`. Useful for summarization or classification. Fails on restricted internal browser pages (e.g., `chrome://`, `about:`, or extension pages) or if the tab is not loaded.
 
 | Param | Type | Description |
 |---|---|---|
-| `tab_id` | number | The numeric ID of the tab whose body text to extract. Required. |
+| `tab_id` | number \| string | The ID of the tab whose body text to extract. Required. |
+| `browser` | string | Optional browser hint (`"chrome"`, `"firefox"`). |
 
 ---
 

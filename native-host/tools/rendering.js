@@ -28,9 +28,10 @@ export function formatDomainHeader(domain, count) {
   return `📁 ${domain} — ${count} tab(s)`;
 }
 
-/** Draw window header. */
-export function formatWindowHeader(winId, count) {
-  return `🪟 Window ${winId} — ${count} tab(s)`;
+/** Draw window header with optional browser label. */
+export function formatWindowHeader(winId, count, browser) {
+  const browserPrefix = browser ? `[${browser.charAt(0).toUpperCase() + browser.slice(1)}] ` : '';
+  return `🪟 ${browserPrefix}Window ${winId} — ${count} tab(s)`;
 }
 
 /** Draw group prefix. */
@@ -40,9 +41,10 @@ export function formatGroupPrefix(groupMap, tab) {
   return g ? `[Group: ${g.title || 'Group ' + g.id}] ` : '';
 }
 
-/** Draw the tab's numeric id - every id-based tool (activate_tab, update_tab,
- * get_tab_text, group_tabs, ungroup_tabs, close_tabs' tab_ids mode) needs one,
- * and this is the only place callers can read it from. */
+/** Draw the tab's numeric or composite id - every id-based tool needs one. */
 export function formatIdPrefix(tab) {
+  if (tab.browser) {
+    return `[id:${tab.browser}:${tab.id}] `;
+  }
   return `[id:${tab.id}] `;
 }

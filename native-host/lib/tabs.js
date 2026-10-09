@@ -21,7 +21,8 @@ export function domainOf(tab) {
     throw new Error('tab.url is missing or null');
   }
   const u = new URL(tab.url);
-  if (u.protocol === 'chrome:' || u.protocol === 'chrome-extension:') {
+  if (u.protocol === 'chrome:' || u.protocol === 'chrome-extension:' ||
+      u.protocol === 'moz-extension:' || u.protocol === 'about:') {
     return `${u.protocol}//${u.hostname || u.pathname.split('/')[0] || ''}`.replace(/\/$/, '');
   }
   return u.hostname || '(local)';

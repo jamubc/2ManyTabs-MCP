@@ -52,12 +52,15 @@ function renderByDomain(tabs, groupMap) {
 function renderByWindow(tabs, groupMap) {
   const grouped = {};
   for (const t of tabs) {
-    (grouped[t.windowId] ??= []).push(t);
+    const key = t.browser ? `${t.browser}:${t.windowId}` : `${t.windowId}`;
+    (grouped[key] ??= []).push(t);
   }
 
   const lines = [];
-  for (const [winId, tabsInWin] of Object.entries(grouped)) {
-    lines.push(formatWindowHeader(winId, tabsInWin.length));
+  for (const [key, tabsInWin] of Object.entries(grouped)) {
+    const browser = tabsInWin[0]?.browser;
+    const winId = tabsInWin[0]?.windowId ?? key;
+    lines.push(formatWindowHeader(winId, tabsInWin.length, browser));
     for (const t of tabsInWin) {
       const label = tabLabel(t);
       const flags = buildFlags(t);
@@ -100,8 +103,13 @@ export function formatTabData(data) {
 
   const lines = [];
 
+  const browsers = [...new Set(tabs.map((t) => t.browser).filter(Boolean))];
+  const browserSummary = browsers.length > 1
+    ? ` across ${browsers.length} browsers (${browsers.map((b) => `${b}: ${tabs.filter((t) => t.browser === b).length}`).join(', ')}) and`
+    : ' across';
+
   lines.push(
-    `📊 ${tabs.length} tab(s) across ${windows} window(s)` +
+    `📊 ${tabs.length} tab(s)${browserSummary} ${windows} window(s)` +
       (query ? ` matching "${query}"` : '') +
       (duplicates_only ? ' (duplicates only)' : '') +
       (dupCount > 0 ? ` · ${dupCount} duplicate(s) found` : '') +

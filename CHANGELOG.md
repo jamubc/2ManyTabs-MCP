@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.0.0] - 2026-09-19
+
+### Rebrand
+- Rebranded from **2ManyTabs MCP** to **Internet MCP** (`internet-mcp-host` / `internet-mcp`), expanding from tab management to universal live browser control.
+- Maintained backwards-compatible binary alias `2manytabs-mcp`.
+
+### Added
+- **Script Injection (`execute_script` tool)**: Run JavaScript code/expressions in any open browser tab, enabling AI agents to extract dynamic DOM elements (images, tables, articles) and automate interactions.
+- **Multi-Browser Concurrency**: Upgraded WebSocket bridge to an active client registry. Multiple browsers (Chrome + Firefox) and multiple profiles/windows can run simultaneously without collisions or disconnect drops.
+- Composite tab ID addressing (`chrome:12`, `firefox:34`) and automatic tab ownership routing.
+- Multi-browser summary and window headers in `list_tabs`.
+- Integration tests in `test/multibrowser.js`.
+
 ## [2.1.0] - 2026-09-19
 
 ### Added

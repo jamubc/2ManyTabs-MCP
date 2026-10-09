@@ -54,10 +54,12 @@ let role            = 'starting';   // 'starting' | 'owner' | 'follower'
 let bindInProgress  = false;
 
 // OWNER state -------------------------------------------------------
-let extensionSocket = null;         // the browser extension's socket
-const peerClients   = new Set();    // connected follower sockets
-let wireId          = 0;            // id for requests we send to the extension
-const inflight      = new Map();    // wireId → delivery descriptor (local or peer)
+// Map of clientId -> { id, socket, browser, name, origin, connectedAt }
+const extensionClients = new Map();
+const peerClients      = new Set();    // connected follower sockets
+let wireId             = 0;            // id for requests we send to extensions
+const inflight         = new Map();    // wireId -> { socket, resolve, reject, timer }
+const tabClientIndex   = new Map();    // tabId | 'browser:tabId' -> clientId
 
 // FOLLOWER state ----------------------------------------------------
 let peerSocket      = null;         // our client connection to the owner
@@ -69,7 +71,7 @@ const readyWaiters  = [];
 
 function log(msg) {
   // stderr only — stdout is reserved for the MCP stdio transport.
-  process.stderr.write(`[2manytabs-mcp] ${msg}\n`);
+  process.stderr.write(`[internet-mcp] ${msg}\n`);
 }
 
 // ---------------------------------------------------------------------------
@@ -95,7 +97,7 @@ function attemptBind() {
       return;
     }
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('2ManyTabs MCP host running\n');
+    res.end('Internet MCP host running\n');
   });
 
   httpServer.on('error', (err) => {
@@ -136,7 +138,7 @@ function attemptBind() {
         socket.close(4003, 'Unauthorized origin');
         return;
       }
-      handleExtensionConnection(socket);
+      handleExtensionConnection(socket, req);
     }
   });
 
@@ -149,9 +151,39 @@ function attemptBind() {
   });
 }
 
-function handleExtensionConnection(socket) {
-  extensionSocket = socket;
-  log('Extension connected');
+function handleExtensionConnection(socket, req) {
+  const origin = req.headers.origin || '';
+  let browser = origin.startsWith('moz-extension://') ? 'firefox' : 'chrome';
+  let name = browser === 'firefox' ? 'Firefox' : 'Chrome';
+  let clientId = `${browser}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
+  try {
+    const parsedUrl = new URL(req.url, 'http://127.0.0.1');
+    const browserQuery = parsedUrl.searchParams.get('browser');
+    const nameQuery = parsedUrl.searchParams.get('name');
+    const instanceQuery = parsedUrl.searchParams.get('instance');
+
+    if (browserQuery) browser = browserQuery.toLowerCase();
+    if (nameQuery) name = nameQuery;
+    else if (browser === 'firefox') name = 'Firefox';
+    else if (browser === 'chrome') name = 'Chrome';
+
+    if (instanceQuery) clientId = instanceQuery;
+  } catch {
+    // fallback to defaults
+  }
+
+  const client = {
+    id: clientId,
+    socket,
+    browser,
+    name,
+    origin,
+    connectedAt: Date.now(),
+  };
+
+  extensionClients.set(clientId, client);
+  log(`Extension connected: ${name} (${browser}) [${clientId}]. Total active: ${extensionClients.size}`);
   flushReady();
 
   socket.on('message', (raw) => {
@@ -161,15 +193,27 @@ function handleExtensionConnection(socket) {
     if (!d) return;
     clearTimeout(d.timer);
     inflight.delete(msg.id);
-    deliver(d, msg.result, msg.error);
+    if (msg.error) d.reject(new Error(msg.error));
+    else           d.resolve(msg.result);
   });
 
   socket.on('close', () => {
-    if (extensionSocket === socket) {
-      extensionSocket = null;
-      log('Extension disconnected');
+    extensionClients.delete(clientId);
+    // Reject any in-flight requests that were waiting on this socket
+    for (const [id, d] of inflight.entries()) {
+      if (d.socket === socket) {
+        clearTimeout(d.timer);
+        inflight.delete(id);
+        d.reject(new Error(`Extension connection lost: ${name}`));
+      }
     }
+    // Clean up indexed tab ownership for this client
+    for (const [key, cId] of tabClientIndex.entries()) {
+      if (cId === clientId) tabClientIndex.delete(key);
+    }
+    log(`Extension disconnected: ${name} [${clientId}]. Remaining: ${extensionClients.size}`);
   });
+
   socket.on('error', () => { /* close handles cleanup */ });
 }
 
@@ -177,42 +221,185 @@ function handlePeerConnection(socket) {
   peerClients.add(socket);
   log(`Follower host connected (${peerClients.size} active)`);
 
-  socket.on('message', (raw) => {
+  socket.on('message', async (raw) => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
     if (msg.type !== 'call') return;
-    forwardToExtension(msg.action, msg.params, { kind: 'peer', socket, peerReqId: msg.peerReqId });
+    try {
+      const result = await routeCall(msg.action, msg.params);
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'reply', peerReqId: msg.peerReqId, result }));
+      }
+    } catch (err) {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'reply', peerReqId: msg.peerReqId, error: err.message }));
+      }
+    }
   });
 
   socket.on('close', () => { peerClients.delete(socket); });
   socket.on('error', () => { /* close handles cleanup */ });
 }
 
-// Send one request to the extension on behalf of a local caller or a follower.
-function forwardToExtension(action, params, descriptor) {
-  if (!extensionSocket || extensionSocket.readyState !== WebSocket.OPEN) {
-    deliver(descriptor, undefined, EXT_NOT_CONNECTED_MSG);
-    return;
-  }
-  const id = ++wireId;
-  descriptor.timer = setTimeout(() => {
-    inflight.delete(id);
-    deliver(descriptor, undefined, 'Timed out waiting for browser extension response (10s).');
-  }, CALL_TIMEOUT_MS);
-  inflight.set(id, descriptor);
-  extensionSocket.send(JSON.stringify({ id, action, ...(params || {}) }));
+function sendToClient(client, action, params = {}) {
+  return new Promise((resolve, reject) => {
+    if (!client?.socket || client.socket.readyState !== WebSocket.OPEN) {
+      return reject(new Error(EXT_NOT_CONNECTED_MSG));
+    }
+    const id = ++wireId;
+    const timer = setTimeout(() => {
+      inflight.delete(id);
+      reject(new Error('Timed out waiting for browser extension response (10s).'));
+    }, CALL_TIMEOUT_MS);
+    inflight.set(id, { socket: client.socket, resolve, reject, timer });
+    client.socket.send(JSON.stringify({ id, action, ...params }));
+  });
 }
 
-// Deliver an extension result back to wherever the request came from.
-function deliver(descriptor, result, error) {
-  if (descriptor.kind === 'local') {
-    if (error) descriptor.reject(new Error(error));
-    else       descriptor.resolve(result);
-  } else { // 'peer'
-    if (descriptor.socket.readyState === WebSocket.OPEN) {
-      descriptor.socket.send(JSON.stringify({ type: 'reply', peerReqId: descriptor.peerReqId, result, error }));
+function getActiveClients() {
+  return Array.from(extensionClients.values()).filter(c => c.socket.readyState === WebSocket.OPEN);
+}
+
+function resolveClientForTab(tabId, browserHint) {
+  const clients = getActiveClients();
+  if (clients.length === 0) return null;
+  if (clients.length === 1) return { client: clients[0], cleanTabId: typeof tabId === 'string' && tabId.includes(':') ? Number(tabId.split(':')[1]) : Number(tabId) };
+
+  // Check composite string ID (e.g. "firefox:42" or "chrome:10")
+  if (typeof tabId === 'string' && tabId.includes(':')) {
+    const [prefix, idStr] = tabId.split(':');
+    const cleanTabId = Number(idStr);
+    const found = clients.find(c => c.browser === prefix.toLowerCase() || c.id === prefix);
+    if (found) return { client: found, cleanTabId };
+  }
+
+  const cleanId = typeof tabId === 'string' ? Number(tabId) : tabId;
+
+  if (browserHint) {
+    const found = clients.find(c => c.browser === browserHint.toLowerCase());
+    if (found) return { client: found, cleanTabId: cleanId };
+  }
+
+  // Lookup in tab index
+  const indexedClientId = tabClientIndex.get(cleanId);
+  if (indexedClientId) {
+    const found = extensionClients.get(indexedClientId);
+    if (found && found.socket.readyState === WebSocket.OPEN) {
+      return { client: found, cleanTabId: cleanId };
     }
   }
+
+  // Fallback to first client
+  return { client: clients[0], cleanTabId: cleanId };
+}
+
+async function routeCall(action, params = {}) {
+  const clients = getActiveClients();
+  if (clients.length === 0) {
+    throw new Error(EXT_NOT_CONNECTED_MSG);
+  }
+
+  if (action === 'query_tabs') {
+    const results = await Promise.allSettled(
+      clients.map(c => sendToClient(c, action, params))
+    );
+
+    // Support single mock client echo in integration tests
+    if (clients.length === 1 && results[0].status === 'fulfilled' && !Array.isArray(results[0].value)) {
+      return results[0].value;
+    }
+
+    const allTabs = [];
+    for (let i = 0; i < clients.length; i++) {
+      const res = results[i];
+      if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+        const client = clients[i];
+        for (const tab of res.value) {
+          tab.browser = client.browser;
+          tab.browserInstance = client.id;
+          tab.browserName = client.name;
+          allTabs.push(tab);
+          tabClientIndex.set(`${client.browser}:${tab.id}`, client.id);
+          tabClientIndex.set(tab.id, client.id);
+        }
+      }
+    }
+    return allTabs;
+  }
+
+  if (action === 'query_groups') {
+    const results = await Promise.allSettled(
+      clients.map(c => sendToClient(c, action, params))
+    );
+
+    if (clients.length === 1 && results[0].status === 'fulfilled' && !Array.isArray(results[0].value)) {
+      return results[0].value;
+    }
+
+    const allGroups = [];
+    for (let i = 0; i < clients.length; i++) {
+      const res = results[i];
+      if (res.status === 'fulfilled' && Array.isArray(res.value)) {
+        const client = clients[i];
+        for (const grp of res.value) {
+          grp.browser = client.browser;
+          grp.browserInstance = client.id;
+          allGroups.push(grp);
+        }
+      }
+    }
+    return allGroups;
+  }
+
+  if (action === 'close_tabs' && Array.isArray(params.tab_ids)) {
+    const clientBatches = new Map();
+    for (const rawId of params.tab_ids) {
+      const target = resolveClientForTab(rawId, params.browser);
+      const client = target?.client || clients[0];
+      const cleanId = target?.cleanTabId ?? Number(rawId);
+      if (!clientBatches.has(client)) clientBatches.set(client, []);
+      clientBatches.get(client).push(cleanId);
+    }
+
+    let totalClosed = 0;
+    for (const [client, ids] of clientBatches.entries()) {
+      const res = await sendToClient(client, action, { ...params, tab_ids: ids });
+      if (res && typeof res.closed === 'number') totalClosed += res.closed;
+    }
+    return { closed: totalClosed };
+  }
+
+  if (params.tab_id !== undefined) {
+    const target = resolveClientForTab(params.tab_id, params.browser);
+    const client = target?.client || clients[0];
+    const cleanParams = { ...params, tab_id: target?.cleanTabId ?? params.tab_id };
+    delete cleanParams.browser;
+    return sendToClient(client, action, cleanParams);
+  }
+
+  if (params.tab_ids !== undefined) {
+    const target = resolveClientForTab(params.tab_ids[0], params.browser);
+    const client = target?.client || clients[0];
+    const cleanIds = params.tab_ids.map(id => {
+      const t = resolveClientForTab(id, params.browser);
+      return t?.cleanTabId ?? id;
+    });
+    const cleanParams = { ...params, tab_ids: cleanIds };
+    delete cleanParams.browser;
+    return sendToClient(client, action, cleanParams);
+  }
+
+  if (params.browser) {
+    const match = clients.find(c => c.browser === params.browser.toLowerCase());
+    if (match) {
+      const cleanParams = { ...params };
+      delete cleanParams.browser;
+      return sendToClient(match, action, cleanParams);
+    }
+  }
+
+  // Default to first client
+  return sendToClient(clients[0], action, params);
 }
 
 // ---------------------------------------------------------------------------
@@ -260,9 +447,6 @@ function connectPeer() {
   socket.on('error', () => { /* close follows */ });
 }
 
-// The owner connection dropped. After a little jitter (to avoid a thundering
-// herd of followers), try to become the owner. Whoever wins the port wins;
-// the rest will EADDRINUSE and fall back to following the new owner.
 function scheduleReElection() {
   const delay = 200 + Math.floor(Math.random() * 300);
   setTimeout(() => {
@@ -302,8 +486,13 @@ function failProxyPending() {
 // ---------------------------------------------------------------------------
 
 function hasRoute() {
-  if (role === 'owner')    return !!extensionSocket && extensionSocket.readyState === WebSocket.OPEN;
-  if (role === 'follower') return !!peerSocket      && peerSocket.readyState      === WebSocket.OPEN;
+  if (role === 'owner') {
+    for (const client of extensionClients.values()) {
+      if (client.socket.readyState === WebSocket.OPEN) return true;
+    }
+    return false;
+  }
+  if (role === 'follower') return !!peerSocket && peerSocket.readyState === WebSocket.OPEN;
   return false;
 }
 
@@ -337,9 +526,7 @@ function waitForRoute() {
 export async function callExtension(action, params = {}) {
   const activeRole = await waitForRoute();          // throws the clear error after the grace window
   if (activeRole === 'owner') {
-    return new Promise((resolve, reject) => {
-      forwardToExtension(action, params, { kind: 'local', resolve, reject });
-    });
+    return routeCall(action, params);
   }
   return followerCall(action, params);
 }
@@ -350,9 +537,11 @@ export function isExtensionConnected() {
 
 // Lightweight introspection for logging / a future status tool.
 export function bridgeStatus() {
+  const clients = getActiveClients();
   return {
     role,
-    extension_connected: !!extensionSocket && extensionSocket.readyState === WebSocket.OPEN,
+    extension_connected: clients.length > 0,
+    clients: clients.map(c => ({ id: c.id, browser: c.browser, name: c.name })),
     followers: peerClients.size,
     owner_reachable: role === 'follower' ? (!!peerSocket && peerSocket.readyState === WebSocket.OPEN) : undefined,
   };

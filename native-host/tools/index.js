@@ -12,6 +12,7 @@ import { updateTabGroupTool } from './update-tab-group.tool.js';
 import { activateTabTool } from './activate-tab.tool.js';
 import { updateTabTool } from './update-tab.tool.js';
 import { getTabTextTool } from './get-tab-text.tool.js';
+import { executeScriptTool } from './execute-script.tool.js';
 
 export const toolRegistry = [
   listTabsTool,
@@ -24,4 +25,5 @@ export const toolRegistry = [
   activateTabTool,
   updateTabTool,
   getTabTextTool,
+  executeScriptTool,
 ];

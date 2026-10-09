@@ -7,10 +7,13 @@
 import {
   queryTabs, closeTabs, openTabs, groupTabs, ungroupTabs,
   queryGroups, updateGroup, activateTab, updateTab, getTabText,
+  executeScript,
 } from '../lib/tab-ops.js';
 
 const WS_URL = 'ws://127.0.0.1:9876';
-const ALARM_NAME = '2manytabs-mcp-reconnect';
+const ALARM_NAME = 'internet-mcp-reconnect';
+const BROWSER_TYPE = (typeof import.meta !== 'undefined' && import.meta.env?.BROWSER) ? import.meta.env.BROWSER : 'chrome';
+const INSTANCE_ID = `${BROWSER_TYPE}_${Math.random().toString(36).slice(2, 8)}`;
 
 export default defineBackground(() => {
   let ws = null;
@@ -30,7 +33,8 @@ export default defineBackground(() => {
     if (isAlive()) return;
 
     try {
-      ws = new WebSocket(WS_URL);
+      const wsUrl = `${WS_URL}?browser=${encodeURIComponent(BROWSER_TYPE)}&instance=${encodeURIComponent(INSTANCE_ID)}`;
+      ws = new WebSocket(wsUrl);
     } catch (e) {
       ws = null;
       setStatus(false);
@@ -140,10 +144,11 @@ export default defineBackground(() => {
       case 'ungroup_tabs':  return ungroupTabs(msg.tab_ids);
       case 'query_groups':  return queryGroups();
       case 'update_group':  return updateGroup(msg.group_id, msg.title, msg.color, msg.collapsed);
-      case 'activate_tab':  return activateTab(msg.tab_id);
-      case 'update_tab':    return updateTab(msg.tab_id, msg.url, msg.pinned, msg.muted);
-      case 'get_tab_text':  return getTabText(msg.tab_id);
-      case 'ping':          return { pong: true };
+      case 'activate_tab':    return activateTab(msg.tab_id);
+      case 'update_tab':      return updateTab(msg.tab_id, msg.url, msg.pinned, msg.muted);
+      case 'get_tab_text':    return getTabText(msg.tab_id);
+      case 'execute_script':  return executeScript(msg.tab_id, msg.script, msg.world);
+      case 'ping':            return { pong: true };
       default:
         throw new Error(`Unknown action: ${msg.action}`);
     }

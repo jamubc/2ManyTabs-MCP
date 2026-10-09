@@ -198,3 +198,62 @@ export async function getTabText(tabId) {
 
   return { text: results[0].result || '' };
 }
+
+export async function executeScript(tabId, script, world = 'ISOLATED') {
+  if (typeof tabId !== 'number') {
+    throw new Error('Provide a numeric tab ID.');
+  }
+
+  if (typeof script !== 'string' || !script.trim()) {
+    throw new Error('Provide a non-empty script string to execute.');
+  }
+
+  const tab = await browser.tabs.get(tabId);
+  if (!tab) {
+    throw new Error(`Tab with ID ${tabId} not found.`);
+  }
+
+  const url = tab.url || '';
+  if (url.startsWith('chrome://') || url.startsWith('chrome-extension://') ||
+      url.startsWith('edge://') || url.startsWith('moz-extension://') || url.startsWith('about:')) {
+    throw new Error('Scripting is not permitted on restricted system URLs.');
+  }
+
+  if (!browser.scripting) {
+    throw new Error('Scripting is not supported in this browser.');
+  }
+
+  const targetWorld = world === 'MAIN' ? 'MAIN' : 'ISOLATED';
+
+  const results = await browser.scripting.executeScript({
+    target: { tabId },
+    world: targetWorld,
+    func: async (code) => {
+      try {
+        let fn;
+        try {
+          fn = new Function(`return (async () => (${code}))()`);
+        } catch {
+          fn = new Function(`return (async () => { ${code} })()`);
+        }
+        const val = await fn();
+        return {
+          success: true,
+          result: val !== undefined ? JSON.parse(JSON.stringify(val)) : null,
+        };
+      } catch (err) {
+        return {
+          success: false,
+          error: err.stack || err.message || String(err),
+        };
+      }
+    },
+    args: [script],
+  });
+
+  if (!results || results.length === 0) {
+    return { success: false, error: 'No execution result returned from browser.' };
+  }
+
+  return results[0].result;
+}

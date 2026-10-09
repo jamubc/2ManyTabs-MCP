@@ -1,6 +1,6 @@
 {
-  "name": "2manytabs-mcp-extension",
-  "version": "2.1.0",
+  "name": "internet-mcp-extension",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
