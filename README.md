@@ -12,13 +12,24 @@ An MCP server and browser extension that let your AI agent tame your overflowing
 
 ### 1. Add the MCP server
 
-One command, with Node.js 18 or newer installed. This example uses Claude Code:
+One command, with Node.js 18 or newer installed. In Claude Code:
 
 ```shell
 claude mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
 ```
 
-Other clients (Claude Desktop, Cursor, VS Code and others) take the same command in their MCP config:
+Using another client? Open yours:
+
+<details>
+<summary><strong>Claude Desktop</strong></summary>
+
+Add this to your config file, then restart Claude Desktop.
+
+| OS | Path |
+|---|---|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Linux | `~/.config/claude/claude_desktop_config.json` |
 
 ```json
 {
@@ -30,6 +41,110 @@ Other clients (Claude Desktop, Cursor, VS Code and others) take the same command
   }
 }
 ```
+</details>
+
+<details>
+<summary><strong>VS Code / GitHub Copilot</strong></summary>
+
+Create `.vscode/mcp.json` in your workspace, or run **MCP: Open User Configuration** for all workspaces:
+
+```json
+{
+  "servers": {
+    "2manytabs-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><strong>Cursor</strong></summary>
+
+Open **Settings → MCP** and add a new server, or edit `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "2manytabs-mcp": {
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><strong>Windsurf</strong></summary>
+
+Open **Settings → Cascade → MCP**, or edit `mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "2manytabs-mcp": {
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><strong>Continue</strong></summary>
+
+Add to `.continue/config.json`, or create `.continue/mcpServers/2manytabs-mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "2manytabs-mcp": {
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+</details>
+
+<details>
+<summary><strong>Cline</strong></summary>
+
+Open the **MCP Servers** panel and add a server with command `npx` and args `-y 2manytabs-mcp-host`.
+</details>
+
+<details>
+<summary><strong>Hermes Agent</strong></summary>
+
+```shell
+hermes mcp add 2manytabs-mcp --command "npx -y 2manytabs-mcp-host"
+hermes mcp test 2manytabs-mcp
+```
+</details>
+
+<details>
+<summary><strong>OpenClaw</strong></summary>
+
+Add this to your OpenClaw MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "2manytabs-mcp": {
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+</details>
+
+Any other client that runs MCP servers over stdio works with the command `npx -y 2manytabs-mcp-host`.
 
 ### 2. Add the browser extension
 
@@ -40,13 +155,9 @@ The extension is not in a browser store yet. Download it from the [latest releas
 
 Want it signed and in the official stores, with no more temporary loads? [Open an issue](https://github.com/jamubc/2ManyTabs-MCP/issues) to ask.
 
-### 3. Check it works
-
-Restart your MCP client and ask it to "list my open tabs". You should get your tabs back with ids like `chrome:12` or `firefox:34`. If it says the extension is not connected, open the extension and check that it shows Connected.
-
 ## Tools
 
-Ask your agent in plain words, for example "close my duplicate tabs", "group my GitHub tabs" or "what does the pricing tab say?". Tab ids look like `chrome:12` or `firefox:34`, and several browsers can be connected at once.
+Tab ids look like `chrome:12` or `firefox:34`, and several browsers can be connected at once.
 
 | Tool | Description |
 |---|---|
@@ -61,6 +172,20 @@ Ask your agent in plain words, for example "close my duplicate tabs", "group my 
 | `group_tabs` | Puts tabs into a new or existing tab group with `title` and `color` |
 | `ungroup_tabs` | Removes tabs from their groups |
 | `update_tab_group` | Changes a group's `title`, `color` or `collapsed` state |
+
+## Usage
+
+Ask your agent in plain words. Some things to try:
+
+| Ask | What happens |
+|---|---|
+| "How many tabs do I have open, and on which sites?" | A count per site across every connected browser |
+| "Close my duplicate tabs" | Previews the duplicates, then closes them once you agree |
+| "Group my GitHub tabs and call the group Work" | Creates a named tab group |
+| "Summarise the article in my current tab" | Reads the page text and summarises it |
+| "Find the tab with my flight booking and bring it to the front" | Searches titles and addresses, then switches to it |
+| "Open the docs for React, Vue and Svelte" | Opens each site in a new tab |
+| "Get every image link on this page" (Firefox) | Runs a script in the tab and returns the links |
 
 ## Compatibility
 

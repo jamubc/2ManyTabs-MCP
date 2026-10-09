@@ -2,6 +2,21 @@
   "name": "2manytabs-mcp-host",
   "version": "3.0.0",
   "description": "MCP server that exposes Chrome and Firefox tabs via the 2ManyTabs MCP extension",
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "claude",
+    "ai-agent",
+    "browser",
+    "tabs",
+    "tab-manager",
+    "tab-groups",
+    "browser-automation",
+    "chrome-extension",
+    "firefox-extension",
+    "librewolf"
+  ],
   "type": "module",
   "main": "host.js",
   "bin": {
