@@ -1,0 +1,21 @@
+native-host/package.json
+  s_21ac5e5b7bc523::t_5178db47ec2cea 10-15,26-28
+.gitignore
+  s_21ac5e5b7bc523::t_5178db47ec2cea 36-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1f772e847edd579e2b6bd2e14f540c0d5d32e7eb",
+  "prompts": {},
+  "sessions": {
+    "s_21ac5e5b7bc523": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a50636d-404a-44ef-a9a5-29d91e7e3c38",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
