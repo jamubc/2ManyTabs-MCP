@@ -1,21 +1,30 @@
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-function others(peers) {
-  return peers.browsers.filter((b) => b.id !== peers.self).map((b) => b.name);
-}
+function renderMap(peers, live) {
+  const map = document.getElementById('linkMap');
+  const dots = document.getElementById('agentDots');
+  const note = document.getElementById('agentNote');
+  const list = document.getElementById('browserList');
 
-function connectedLabel(peers) {
-  if (!peers) return 'Connected';
-  const rest = others(peers);
-  return `Connected · ${plural(peers.agents, 'agent')}` + (rest.length ? ` · also ${rest.join(', ')}` : '');
-}
+  map.classList.toggle('off', !live);
+  const agents = live && peers ? peers.agents : 0;
+  dots.replaceChildren(...Array.from({ length: Math.min(agents, 5) }, () => {
+    const d = document.createElement('span');
+    d.className = 'agent-dot';
+    return d;
+  }));
+  note.textContent = live ? (peers ? plural(agents, 'agent') : 'agents') : 'no agent';
 
-function connectedDetail(peers) {
-  const rest = others(peers);
-  return [
-    `${plural(peers.agents, 'AI agent')} using this MCP`,
-    rest.length ? `Also connected: ${rest.join(', ')}` : 'No other browsers connected',
-  ].join('\n');
+  const browsers = live && peers ? peers.browsers : [{ id: null, name: 'this browser' }];
+  list.replaceChildren(...browsers.map((b) => {
+    const li = document.createElement('li');
+    li.textContent = b.name;
+    if (peers && b.id === peers.self) {
+      li.className = 'here';
+      li.title = 'This browser';
+    }
+    return li;
+  }));
 }
 
 async function refresh() {
@@ -40,9 +49,9 @@ async function refresh() {
     text.textContent = 'Off';
   } else {
     pill.className = 'pill ' + (connected ? 'connected' : 'disconnected');
-    text.textContent = connected ? connectedLabel(storage.peers) : 'Disconnected';
+    text.textContent = connected ? 'Connected' : 'Disconnected';
   }
-  pill.title = connected && storage.peers ? connectedDetail(storage.peers) : '';
+  renderMap(storage.peers, enabled && connected);
   document.getElementById('tabCount').textContent = tabs.length;
 }
 
