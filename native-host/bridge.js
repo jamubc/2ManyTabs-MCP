@@ -330,7 +330,7 @@ function batchByClient(rawIds, browserHint) {
   return batches;
 }
 
-async function fanOut(action, params, clients, onItem) {
+async function fanOut(action, params, clients, onItem, onClient) {
   const results = await Promise.allSettled(clients.map((c) => sendToClient(c, action, params)));
   // Support single mock client echo in integration tests
   if (clients.length === 1 && results[0].status === 'fulfilled' && !Array.isArray(results[0].value)) {
@@ -341,6 +341,7 @@ async function fanOut(action, params, clients, onItem) {
   const all = [];
   results.forEach((res, i) => {
     if (res.status !== 'fulfilled' || !Array.isArray(res.value)) return;
+    onClient?.(clients[i]);
     for (const item of res.value) {
       onItem(item, clients[i]);
       all.push(item);
@@ -367,7 +368,7 @@ async function routeCall(action, params = {}) {
       tab.browserInstance = client.id;
       tab.browserName = client.name;
       noteOwner(tabClientIndex, tab.id, client.id);
-    });
+    }, (client) => forgetClient(tabClientIndex, client.id));
   }
 
   if (action === 'query_groups') {
@@ -375,7 +376,7 @@ async function routeCall(action, params = {}) {
       grp.browser = client.browser;
       grp.browserInstance = client.id;
       noteOwner(groupClientIndex, grp.id, client.id);
-    });
+    }, (client) => forgetClient(groupClientIndex, client.id));
   }
 
   // Tab groups can't span browsers: every tab (and the target group) must
