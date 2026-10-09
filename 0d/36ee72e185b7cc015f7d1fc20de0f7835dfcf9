@@ -1,0 +1,24 @@
+native-host/package.json
+  s_21ac5e5b7bc523::t_aaf826ac34cb21 5-19
+README.md
+  s_21ac5e5b7bc523::t_aaf826ac34cb21 186
+  s_21ac5e5b7bc523::t_9b2ff2dd2cf636 160,176-185,187-188
+  s_21ac5e5b7bc523::t_10bef2d6fb4e84 15,21-32,44-147
+  s_21ac5e5b7bc523::t_224598f9db925d 189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0d36ee72e185b7cc015f7d1fc20de0f7835dfcf9",
+  "prompts": {},
+  "sessions": {
+    "s_21ac5e5b7bc523": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a50636d-404a-44ef-a9a5-29d91e7e3c38",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
