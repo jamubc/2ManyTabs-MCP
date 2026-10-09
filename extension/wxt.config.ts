@@ -5,7 +5,7 @@ export default defineConfig({
   srcDir: '.',
   manifest: ({ browser }) => ({
     name: 'Internet MCP',
-    description: 'Bridge your live browser to AI via MCP — run scripts, triage tabs, inspect and automate across Chrome & Firefox.',
+    description: 'Bridge your live browser to AI via MCP: run scripts, triage tabs, inspect and automate across Chrome & Firefox.',
     // tabGroups landed in Firefox 138+ (tabs.group/ungroup) and 139+
     // (tabGroups.query/get/update) - feature-detected in lib/tab-ops.js as a
     // belt-and-suspenders check, but the permission is real on both browsers now.
