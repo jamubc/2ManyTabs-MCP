@@ -336,6 +336,8 @@ async function fanOut(action, params, clients, onItem) {
   if (clients.length === 1 && results[0].status === 'fulfilled' && !Array.isArray(results[0].value)) {
     return results[0].value;
   }
+  const failed = results.filter((res) => res.status === 'rejected');
+  if (failed.length === results.length) throw failed[0].reason;
   const all = [];
   results.forEach((res, i) => {
     if (res.status !== 'fulfilled' || !Array.isArray(res.value)) return;
