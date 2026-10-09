@@ -8,28 +8,37 @@
 
 An MCP server and browser extension that let AI clients list, script and close tabs in Chrome and Firefox.
 
-## Download
+## Install
 
-Clone the repo and install the host. `install.sh` runs on macOS and Linux. Then build the extension.
+### 1. Add the MCP server
 
-```shell
-git clone https://github.com/jamubc/2ManyTabs-MCP.git
-cd 2ManyTabs-MCP
-bash install.sh
-cd extension && npm install && npm run build && npm run build:firefox
-```
-
-## Get started
-
-Register the host with your MCP client from the repo root. This example uses Claude Code. Any client that runs a stdio command works with the same `node` command and path.
+One command, no clone needed. This example uses Claude Code:
 
 ```shell
-claude mcp add 2manytabs-mcp -- node "$PWD/native-host/host.js"
+claude mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
 ```
 
-### Load the extension
+Any other MCP client takes the same command in its config:
 
-Chrome and other Chromium browsers: open `chrome://extensions`, turn on Developer mode, choose Load unpacked, and select `extension/.output/chrome-mv3/`. Firefox: open `about:debugging#/runtime/this-firefox`, choose Load Temporary Add-on, and select `extension/.output/firefox-mv2/manifest.json`. The extension popup shows Connected once the host is running.
+```json
+{
+  "mcpServers": {
+    "2manytabs-mcp": {
+      "command": "npx",
+      "args": ["-y", "2manytabs-mcp-host"]
+    }
+  }
+}
+```
+
+### 2. Add the browser extension
+
+Download the zip for your browser from the [latest release](https://github.com/jamubc/2ManyTabs-MCP/releases/latest).
+
+- Chrome and other Chromium browsers: unzip `2manytabs-mcp-extension-<version>-chrome.zip`, open `chrome://extensions`, turn on Developer mode, choose Load unpacked, and select the unzipped folder.
+- Firefox: open `about:debugging#/runtime/this-firefox`, choose Load Temporary Add-on, and select `2manytabs-mcp-extension-<version>-firefox.zip`. Firefox removes temporary add-ons when it closes.
+
+Open the extension. It shows Connected once your MCP client has started the server.
 
 ## Usage
 
@@ -50,6 +59,17 @@ The host registers eleven tools. Tab ids can be numbers or `chrome:12` and `fire
 | `update_tab_group` | Changes a group's `title`, `color` or `collapsed` state |
 
 Tab group tools need Firefox 139 or newer on Firefox.
+
+## Develop from source
+
+```shell
+git clone https://github.com/jamubc/2ManyTabs-MCP.git
+cd 2ManyTabs-MCP
+bash install.sh
+cd extension && npm install && npm run build && npm run build:firefox
+```
+
+Claude Code picks up the server from `.mcp.json` when you open the repository. Load the extension from `extension/.output/chrome-mv3/` or `extension/.output/firefox-mv2/manifest.json`.
 
 ## Project structure
 
