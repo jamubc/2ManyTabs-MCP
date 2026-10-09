@@ -1,8 +1,3 @@
-// Multi-browser test: multiple browser extensions (Chrome, Firefox) connect
-// simultaneously, aggregate tabs, and route actions without collision.
-// Run on a scratch port:
-//   MANYTABS_BRIDGE_PORT=19878 node test/multibrowser.js
-
 import { WebSocket } from 'ws';
 import { startBridge, callExtension, isExtensionConnected, bridgeStatus } from '../bridge.js';
 
@@ -17,7 +12,6 @@ assert(bridgeStatus().role === 'owner', 'lone host became OWNER');
 
 const chromeTabsExtra = [];
 
-// 1. Connect Chrome extension
 const chromeExt = new WebSocket(`ws://127.0.0.1:${PORT}/?browser=chrome&name=Chrome&instance=chrome_inst`, {
   origin: 'chrome-extension://mock-chrome-id',
 });
@@ -52,7 +46,6 @@ await new Promise((r) => chromeExt.on('open', r));
 await sleep(100);
 assert(isExtensionConnected(), 'Bridge connected with Chrome');
 
-// 2. Connect Firefox extension simultaneously
 const firefoxExt = new WebSocket(`ws://127.0.0.1:${PORT}/?browser=firefox&name=Firefox&instance=firefox_inst`, {
   origin: 'moz-extension://mock-firefox-id',
 });
@@ -84,7 +77,6 @@ await sleep(100);
 const status = bridgeStatus();
 assert(status.clients.length === 2, 'Both Chrome and Firefox are registered as active clients');
 
-// 3. Query tabs across all browsers
 const allTabs = await callExtension('query_tabs');
 assert(Array.isArray(allTabs), 'query_tabs returns array');
 assert(allTabs.length === 4, 'query_tabs aggregates tabs from both browsers (2 + 2 = 4)');
@@ -94,7 +86,6 @@ const firefoxTabs = allTabs.filter((t) => t.browser === 'firefox');
 assert(chromeTabs.length === 2, 'Chrome tabs tagged with browser: chrome');
 assert(firefoxTabs.length === 2, 'Firefox tabs tagged with browser: firefox');
 
-// 4. Targeted execution using composite ID
 const resFirefox = await callExtension('execute_script', { tab_id: 'firefox:20', script: 'return 1;' });
 assert(resFirefox?.result === 'Executed in Firefox tab 20', 'Targeted call routed to Firefox tab 20 via composite ID');
 
@@ -112,12 +103,10 @@ const lastStatus = chromeStatus.at(-1);
 assert(lastStatus?.self === 'chrome_inst' && lastStatus?.agents === 1, 'Status tells Chrome who it is and how many agents are connected');
 assert(lastStatus?.browsers.map((b) => b.browser).sort().join(',') === 'chrome,firefox', 'Status lists both connected browsers');
 
-// 4b. Safety: never guess the browser
 let err = null;
 try { await callExtension('execute_script', { tab_id: 999, script: '1' }); } catch (e) { err = e; }
 assert(/Unknown tab id 999/.test(err?.message), 'Unknown bare id with two browsers is refused, not guessed');
 
-// Chrome reuses id 20 (Firefox already owns 20) -> bare 20 is now ambiguous
 await callExtension('query_tabs');
 chromeTabsExtra.push({ id: 20, title: 'Dup', url: 'https://dup.example', windowId: 1 });
 await callExtension('query_tabs');
@@ -132,7 +121,6 @@ assert(/different browsers/.test(err?.message), 'Grouping tabs across browsers i
 const ug = await callExtension('ungroup_tabs', { tab_ids: ['chrome:10', 'firefox:21'] });
 assert(ug?.ungrouped === 2, 'ungroup_tabs batches per browser and sums results');
 
-// 5. Disconnect Firefox; Chrome should remain active
 firefoxExt.close();
 await sleep(100);
 

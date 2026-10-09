@@ -1,15 +1,5 @@
-// fallow-ignore-file unused-file
-// Tests for extension/lib/tab-ops.js tab operation helpers.
-// Runs from native-host/: node --test lib/background.test.js
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
-
-// ---------------------------------------------------------------------------
-// browser + WebSocket stubs — must be set before tab-ops.js is imported.
-// tab-ops.js references the bare `browser` global: WXT auto-imports it
-// (backed by `chrome` on Chromium, native on Firefox) in the real extension
-// build; here we stand in for that global directly.
-// ---------------------------------------------------------------------------
 
 function makeBrowser() {
   return {
@@ -59,10 +49,6 @@ globalThis.WebSocket = class {
   close() {}
 };
 
-// ---------------------------------------------------------------------------
-// Import after globals are set
-// ---------------------------------------------------------------------------
-
 let groupTabs, updateGroup, updateTab, getTabText, executeScript;
 
 before(async () => {
@@ -73,10 +59,6 @@ before(async () => {
   getTabText = bg.getTabText;
   executeScript = bg.executeScript;
 });
-
-// ---------------------------------------------------------------------------
-// groupTabs
-// ---------------------------------------------------------------------------
 
 describe('groupTabs', () => {
   it('throws when tabIds is empty', async () => {
@@ -115,10 +97,6 @@ describe('groupTabs', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// updateGroup
-// ---------------------------------------------------------------------------
-
 describe('updateGroup', () => {
   it('throws for non-numeric groupId', async () => {
     await assert.rejects(() => updateGroup('bad', undefined, undefined, undefined), /numeric group ID/);
@@ -137,10 +115,6 @@ describe('updateGroup', () => {
     assert.equal(result.updated, 3);
   });
 });
-
-// ---------------------------------------------------------------------------
-// updateTab
-// ---------------------------------------------------------------------------
 
 describe('updateTab', () => {
   it('throws for non-numeric tabId', async () => {
@@ -175,10 +149,6 @@ describe('updateTab', () => {
     assert.equal(result.updated, 9);
   });
 });
-
-// ---------------------------------------------------------------------------
-// getTabText
-// ---------------------------------------------------------------------------
 
 describe('getTabText', () => {
   it('throws for non-numeric tabId', async () => {
@@ -219,10 +189,6 @@ describe('getTabText', () => {
     assert.equal(result.text, '');
   });
 });
-
-// ---------------------------------------------------------------------------
-// executeScript
-// ---------------------------------------------------------------------------
 
 describe('executeScript', () => {
   it('throws when tabId is not a number', async () => {

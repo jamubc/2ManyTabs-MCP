@@ -13,7 +13,6 @@ export const listTabGroupsTool = {
       .describe('Case-insensitive substring filter for group titles.'),
   },
 
-  // fallow-ignore-next-line complexity
   execute: async ({ title_query }) => {
     let groups;
     try {

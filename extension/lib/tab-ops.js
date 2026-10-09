@@ -1,13 +1,3 @@
-// Browser-operation helpers proxied by the background entrypoint.
-//
-// Uses the bare `browser` global: WXT auto-imports `browser` (backed by
-// `chrome` on Chromium, native on Firefox) into every project file, and the
-// native-host cross-package tests set `globalThis.browser` directly before
-// importing this module under plain Node — see native-host/lib/background.test.js.
-//
-// All selection, filtering, and reshaping logic lives in the MCP host
-// (native-host/); this file only proxies chrome.tabs/tabGroups/scripting calls.
-
 function hasTabGroups() {
   return typeof browser !== 'undefined' && !!browser.tabGroups;
 }
@@ -34,7 +24,6 @@ export async function queryTabs() {
   }));
 }
 
-// browser.tabs.remove / group / ungroup reject if any id is stale; filter first.
 async function liveIds(tabIds) {
   const live = new Set((await browser.tabs.query({})).map(t => t.id));
   return tabIds.filter(id => live.has(id));
@@ -50,10 +39,7 @@ export async function closeTabs(tabIds) {
 export async function openTabs(urls) {
   if (!Array.isArray(urls) || urls.length === 0) return { opened: 0 };
 
-  // Create all tabs in parallel
   const createPromises = urls.map(url => {
-    // Only bare domains/paths lack a scheme (e.g. "example.com"); anything
-    // with one already - http(s), about:, chrome:, file:, etc. - passes through.
     const finalUrl = /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`;
     return browser.tabs.create({ url: finalUrl, active: false });
   });
@@ -74,13 +60,11 @@ export async function groupTabs(tabIds, groupId, title, color) {
     throw new Error('None of the provided tab IDs are valid/open.');
   }
 
-  // Group tabs
   const resultGroupId = await browser.tabs.group({
     tabIds: ids,
     groupId: typeof groupId === 'number' ? groupId : undefined
   });
 
-  // Apply title or color updates if requested
   if (title || color) {
     const updateObj = {};
     if (title) updateObj.title = title;
@@ -136,7 +120,6 @@ export async function activateTab(tabId) {
   if (typeof tabId !== 'number') {
     throw new Error('Provide a numeric tab ID.');
   }
-  // Try to find the tab to get its window ID
   const tab = await browser.tabs.get(tabId);
   if (!tab) {
     throw new Error(`Tab with ID ${tabId} not found.`);
@@ -174,7 +157,6 @@ export async function getTabText(tabId) {
     throw new Error(`Tab with ID ${tabId} not found.`);
   }
 
-  // Validate the URL is safe for scripting (e.g. not chrome://)
   const url = tab.url || '';
   if (url.startsWith('chrome://') || url.startsWith('chrome-extension://') ||
       url.startsWith('edge://') || url.startsWith('moz-extension://') || url.startsWith('about:')) {

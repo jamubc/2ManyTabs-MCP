@@ -1,6 +1,3 @@
-// Owner-path test: a lone host should bind the port, own the extension, serve
-// its own calls, AND relay a follower's proxied calls. Run on a scratch port:
-//   MANYTABS_BRIDGE_PORT=19876 node test/owner.js
 import { startBridge, callExtension, isExtensionConnected, bridgeStatus } from '../bridge.js';
 import { WebSocket } from 'ws';
 
@@ -13,7 +10,6 @@ startBridge();
 await sleep(300);
 assert(bridgeStatus().role === 'owner', 'lone host became OWNER (bound the port)');
 
-// Fake extension: echoes every request so we can see routing end-to-end.
 const ext = new WebSocket(`ws://127.0.0.1:${PORT}/`, {
   origin: 'chrome-extension://mock-extension-id-for-testing'
 });
@@ -29,7 +25,6 @@ const local = await callExtension('ping');
 assert(local?.pong === true, 'OWNER local call resolves via the extension');
 assert(local?.echoAction === 'ping', 'OWNER forwarded the correct action to the extension');
 
-// Fake follower: connects to /peer and proxies a call through the owner.
 const peer = new WebSocket(`ws://127.0.0.1:${PORT}/peer`);
 await new Promise((r) => peer.on('open', r));
 const reply = await new Promise((resolve) => {
@@ -40,7 +35,6 @@ assert(reply.type === 'reply', 'OWNER answers a follower with type=reply');
 assert(reply.peerReqId === 42, 'OWNER preserves peerReqId for correlation');
 assert(reply.result?.echoAction === 'query_tabs', 'OWNER routed the follower call to the extension and back');
 
-// No-extension path: after the extension leaves, calls must error clearly (post-grace).
 ext.close();
 await sleep(150);
 let emsg = '';

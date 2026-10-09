@@ -1,9 +1,3 @@
-// 2ManyTabs MCP – Background entrypoint (Chrome MV3 service worker /
-// Firefox MV2 background script — WXT picks the right shape per target).
-//
-// MV3 service workers go idle and kill setTimeout callbacks, so we use
-// browser.alarms to reliably wake the worker and reconnect the WebSocket.
-
 import {
   queryTabs, closeTabs, openTabs, groupTabs, ungroupTabs,
   queryGroups, updateGroup, activateTab, updateTab, getTabText,
@@ -17,10 +11,6 @@ const INSTANCE_ID = `${BROWSER_TYPE}_${Math.random().toString(36).slice(2, 8)}`;
 
 export default defineBackground(() => {
   let ws = null;
-
-  // -------------------------------------------------------------------------
-  // Connection management
-  // -------------------------------------------------------------------------
 
   function isAlive() {
     return ws !== null && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING);
@@ -48,13 +38,10 @@ export default defineBackground(() => {
     ws.onclose = () => {
       ws = null;
       setStatus(false);
-      // Fast retry while the service worker is still alive.
-      // The alarm is the fallback for when it goes idle.
       setTimeout(() => { if (!isAlive()) connect(); }, 2000);
     };
 
     ws.onerror = () => {
-      // onclose fires immediately after; let it handle cleanup.
     };
 
     ws.onmessage = async (event) => {
@@ -87,20 +74,11 @@ export default defineBackground(() => {
     browser.storage.local.set({ connected, lastUpdate: Date.now(), ...(connected ? {} : { peers: null }) });
   }
 
-  // -------------------------------------------------------------------------
-  // Alarm – wakes the service worker every 30 s to reconnect if needed.
-  // browser.alarms is the only reliable wakeup mechanism for MV3 workers.
-  // -------------------------------------------------------------------------
-
-  browser.alarms.create(ALARM_NAME, { periodInMinutes: 0.5 }); // 30 seconds
+  browser.alarms.create(ALARM_NAME, { periodInMinutes: 0.5 });
 
   browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === ALARM_NAME && !isAlive()) connect();
   });
-
-  // -------------------------------------------------------------------------
-  // Startup / install wakeups & state listening
-  // -------------------------------------------------------------------------
 
   browser.runtime.onInstalled.addListener(() => {
     browser.alarms.create(ALARM_NAME, { periodInMinutes: 0.5 });
@@ -120,7 +98,7 @@ export default defineBackground(() => {
         connect();
       } else {
         if (ws) {
-          ws.onclose = null; // Prevent reconnect loop
+          ws.onclose = null;
           ws.close();
           ws = null;
         }
@@ -128,21 +106,6 @@ export default defineBackground(() => {
       }
     }
   });
-
-  // -------------------------------------------------------------------------
-  // Message dispatcher
-  //
-  // The extension proxies a fixed set of chrome.tabs, chrome.tabGroups, and
-  // chrome.scripting operations (via lib/tab-ops.js, using the browser.*
-  // WebExtension API). All selection, filtering, and reshaping logic lives
-  // in the MCP host (native-host/).
-  //
-  // Tools that only filter or reshape data from an existing action here can
-  // ship as host-only changes — no extension reload needed. Adding a
-  // genuinely new browser operation requires a new case in this switch
-  // (and sometimes a new manifest permission in wxt.config.ts) plus an
-  // extension reload.
-  // -------------------------------------------------------------------------
 
   async function dispatch(msg) {
     switch (msg.action) {

@@ -1,38 +1,11 @@
-// 2ManyTabs MCP – Extension Bridge (self-organizing, multi-host)
-//
-// Why this exists
-// ----------------
-// MCP-over-stdio is 1:1 by design: every client (each Hermes instance, the
-// mcpjam inspector) spawns its OWN host.js and owns that process's stdio pipes.
-// That part is correct. The catch is one layer down — all those independent
-// hosts reach for a SINGLE shared resource: there is one browser, one extension,
-// one port (9876), one set of tabs. N MCP servers, a rank-1 resource.
-//
-// Previously the first host to start bound 9876 and every other host's tab tools
-// failed with "extension not connected". Worse, the winner was often a stale
-// session's host, so the session you were actually using couldn't see the tabs.
-//
-// Fix: the hosts self-organize onto the shared resource instead of fighting over it.
-//   • Exactly one host binds 9876 and owns the extension socket  → the OWNER.
-//   • Every other host connects to the owner and proxies its calls → a FOLLOWER.
-//   • If the owner dies, followers race to re-bind; one becomes the new owner and
-//     the extension reconnects to it. No external daemon, no config, and the
-//     extension never knows the difference.
-//
-//   Hermes A ─stdio▶ host(OWNER)    ─ws:9876──────▶ extension ─▶ browser tabs
-//   Hermes B ─stdio▶ host(FOLLOWER) ─ws:9876/peer─▶ OWNER ─────┘
-//
-// Public API is unchanged: startBridge(), callExtension(), isExtensionConnected().
-
 import http                         from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 
-const WS_PORT         = Number(process.env.MANYTABS_BRIDGE_PORT) || 9876; // env override is a test seam; the extension uses 9876
-const PEER_PATH       = '/peer';        // followers connect here; the extension connects to '/'
+const WS_PORT         = Number(process.env.MANYTABS_BRIDGE_PORT) || 9876;
+const PEER_PATH       = '/peer';
 const CALL_TIMEOUT_MS = 10_000;
-const ROUTE_GRACE_MS  = 3_500;          // absorb brief owner↔follower failover before erroring
+const ROUTE_GRACE_MS  = 3_500;
 
-// chrome-extension:// for Chromium builds, moz-extension:// for Firefox.
 const ALLOWED_EXTENSION_ORIGIN_PREFIXES = ['chrome-extension://', 'moz-extension://'];
 
 const EXT_NOT_CONNECTED_MSG =
@@ -50,53 +23,36 @@ const PNA_HEADERS = {
   'Access-Control-Allow-Methods':         'GET, OPTIONS',
 };
 
-// ---------------------------------------------------------------------------
-// Module state
-// ---------------------------------------------------------------------------
-
-let role            = 'starting';   // 'starting' | 'owner' | 'follower'
+let role            = 'starting';
 let bindInProgress  = false;
 
-// OWNER state -------------------------------------------------------
-// Map of clientId -> { id, socket, browser, name, origin, connectedAt }
 const extensionClients = new Map();
-const peerClients      = new Set();    // connected follower sockets
-let wireId             = 0;            // id for requests we send to extensions
-const inflight         = new Map();    // wireId -> { socket, resolve, reject, timer }
-const tabClientIndex   = new Map();    // numeric tabId -> Set<clientId>
-const groupClientIndex = new Map();    // numeric groupId -> Set<clientId>
+const peerClients      = new Set();
+let wireId             = 0;
+const inflight         = new Map();
+const tabClientIndex   = new Map();
+const groupClientIndex = new Map();
 
-// FOLLOWER state ----------------------------------------------------
-let peerSocket      = null;         // our client connection to the owner
-let proxyId         = 0;            // id for requests we send to the owner
-const proxyPending  = new Map();    // proxyId → { resolve, reject, timer }
+let peerSocket      = null;
+let proxyId         = 0;
+const proxyPending  = new Map();
 
-// Calls parked until a usable route appears (covers cold start / failover).
 const readyWaiters  = [];
 
 function log(msg) {
-  // stderr only — stdout is reserved for the MCP stdio transport.
   process.stderr.write(`[2manytabs-mcp] ${msg}\n`);
 }
-
-// ---------------------------------------------------------------------------
-// Entry point
-// ---------------------------------------------------------------------------
 
 export function startBridge() {
   attemptBind();
 }
-
-// ---------------------------------------------------------------------------
-// OWNER: try to bind 9876. Win → own the extension. Lose (EADDRINUSE) → follow.
-// ---------------------------------------------------------------------------
 
 function attemptBind() {
   if (bindInProgress || role === 'owner') return;
   bindInProgress = true;
 
   const httpServer = http.createServer((req, res) => {
-    if (req.method === 'OPTIONS') {            // PNA preflight before the WS upgrade
+    if (req.method === 'OPTIONS') {
       res.writeHead(204, PNA_HEADERS);
       res.end();
       return;
@@ -108,7 +64,6 @@ function attemptBind() {
   httpServer.on('error', (err) => {
     bindInProgress = false;
     if (err.code === 'EADDRINUSE') {
-      // Another host already owns the bridge — expected with multiple sessions. Follow it.
       log(`Port ${WS_PORT} already owned by another host — joining as a follower.`);
       becomeFollower();
     } else {
@@ -128,8 +83,6 @@ function attemptBind() {
     const origin = req.headers.origin || '';
 
     if (req.url === PEER_PATH) {
-      // Follower connections must be node-to-node and should not have a browser origin.
-      // Standard browsers will always send an Origin header for web-based requests.
       if (origin) {
         log(`Rejected peer connection from non-node origin: ${origin}`);
         socket.close(4003, 'Forbidden origin');
@@ -137,7 +90,6 @@ function attemptBind() {
       }
       handlePeerConnection(socket);
     } else {
-      // Extension connections must originate from a browser-extension URI.
       if (!ALLOWED_EXTENSION_ORIGIN_PREFIXES.some(prefix => origin.startsWith(prefix))) {
         log(`Rejected extension connection from unauthorized origin: ${origin}`);
         socket.close(4003, 'Unauthorized origin');
@@ -150,7 +102,7 @@ function attemptBind() {
   httpServer.listen(WS_PORT, '127.0.0.1', () => {
     bindInProgress = false;
     role = 'owner';
-    peerSocket = null;        // shed any stale follower state from a prior life
+    peerSocket = null;
     log(`Bridge OWNER listening on ws://127.0.0.1:${WS_PORT}`);
     log('Waiting for browser extension...');
   });
@@ -175,7 +127,6 @@ function handleExtensionConnection(socket, req) {
 
     if (instanceQuery) clientId = instanceQuery;
   } catch {
-    // fallback to defaults
   }
 
   const client = {
@@ -204,10 +155,8 @@ function handleExtensionConnection(socket, req) {
   });
 
   socket.on('close', () => {
-    // A reconnect with the same instance id replaces this entry; leave the live one alone.
     const replaced = extensionClients.has(clientId) && extensionClients.get(clientId).socket !== socket;
     if (!replaced) extensionClients.delete(clientId);
-    // Reject any in-flight requests that were waiting on this socket
     for (const [id, d] of inflight.entries()) {
       if (d.socket === socket) {
         clearTimeout(d.timer);
@@ -215,7 +164,6 @@ function handleExtensionConnection(socket, req) {
         d.reject(new Error(`Extension connection lost: ${name}`));
       }
     }
-    // Clean up indexed tab ownership for this client
     if (!replaced) {
       for (const index of [tabClientIndex, groupClientIndex]) forgetClient(index, clientId);
     }
@@ -223,7 +171,7 @@ function handleExtensionConnection(socket, req) {
     broadcastStatus();
   });
 
-  socket.on('error', () => { /* close handles cleanup */ });
+  socket.on('error', () => { });
 }
 
 function handlePeerConnection(socket) {
@@ -251,7 +199,7 @@ function handlePeerConnection(socket) {
     peerClients.delete(socket);
     broadcastStatus();
   });
-  socket.on('error', () => { /* close handles cleanup */ });
+  socket.on('error', () => { });
 }
 
 function deliver(client, action, params = {}, agent = 0) {
@@ -295,17 +243,11 @@ function forgetClient(index, clientId) {
   }
 }
 
-// Which client(s) last reported owning a numeric tab / group id. A Set,
-// because two browsers can hand out the same number.
 function noteOwner(index, id, clientId) {
   if (!index.has(id)) index.set(id, new Set());
   index.get(id).add(clientId);
 }
 
-// Turn a tab or group id (12, "12", "firefox:12", "<instanceId>:12") into
-// { client, cleanId }. With several browsers connected a bare number is only
-// accepted when exactly one browser owns it; otherwise we refuse rather than
-// guess, so a close or script never lands in the wrong browser.
 function resolveTarget(rawId, browserHint, index, kind = 'tab') {
   const clients = getActiveClients();
   if (clients.length === 0) throw new Error(EXT_NOT_CONNECTED_MSG);
@@ -328,7 +270,6 @@ function resolveTarget(rawId, browserHint, index, kind = 'tab') {
     if (matches.length === 0) {
       throw new Error(`No connected browser matches "${want}" for ${kind} ${rawId}. Connected: ${clients.map((c) => c.browser).join(', ')}.`);
     }
-    // Two windows/profiles of the same browser: fall through to the owner index.
     const owners = [...(index.get(cleanId) ?? [])].filter((id) => matches.some((c) => c.id === id));
     if (owners.length === 1) return { client: extensionClients.get(owners[0]), cleanId };
     throw new Error(`${kind} ${rawId} is ambiguous across ${matches.length} ${w} instances; use "<instance>:${cleanId}".`);
@@ -344,7 +285,6 @@ function resolveTarget(rawId, browserHint, index, kind = 'tab') {
     : `Unknown ${kind} id ${cleanId} with several browsers connected; run list_tabs first or use ${hint}.`);
 }
 
-// Split a list of ids into per-client batches.
 function batchByClient(rawIds, browserHint) {
   const batches = new Map();
   for (const rawId of rawIds) {
@@ -357,7 +297,6 @@ function batchByClient(rawIds, browserHint) {
 
 async function fanOut(action, params, clients, onItem, onClient, agent = 0) {
   const results = await Promise.allSettled(clients.map((c) => deliver(c, action, params, agent)));
-  // Support single mock client echo in integration tests
   if (clients.length === 1 && results[0].status === 'fulfilled' && !Array.isArray(results[0].value)) {
     return results[0].value;
   }
@@ -405,8 +344,6 @@ async function routeCall(action, params = {}, agent = 0) {
     }, (client) => forgetClient(groupClientIndex, client.id), agent);
   }
 
-  // Tab groups can't span browsers: every tab (and the target group) must
-  // resolve to one client.
   if (action === 'group_tabs') {
     const batches = batchByClient(params.tab_ids, params.browser);
     let groupTarget = null;
@@ -426,7 +363,6 @@ async function routeCall(action, params = {}, agent = 0) {
     return sendToClient(client, action, withoutBrowser(params, { group_id: cleanId }));
   }
 
-  // Batched across browsers, results summed (close_tabs, ungroup_tabs).
   if (Array.isArray(params.tab_ids)) {
     const sumKey = action === 'close_tabs' ? 'closed' : action === 'ungroup_tabs' ? 'ungrouped' : null;
     const batches = batchByClient(params.tab_ids, params.browser);
@@ -454,13 +390,8 @@ async function routeCall(action, params = {}, agent = 0) {
     return sendToClient(match, action, withoutBrowser(params));
   }
 
-  // No target given (e.g. open_tabs without a browser): first connected browser.
   return sendToClient(clients[0], action, params);
 }
-
-// ---------------------------------------------------------------------------
-// FOLLOWER: proxy calls to the owner; re-elect if the owner vanishes.
-// ---------------------------------------------------------------------------
 
 function becomeFollower() {
   role = 'follower';
@@ -498,9 +429,9 @@ function connectPeer() {
   socket.on('close', () => {
     if (peerSocket === socket) peerSocket = null;
     failProxyPending();
-    scheduleReElection();   // owner may have died — try to take over
+    scheduleReElection();
   });
-  socket.on('error', () => { /* close follows */ });
+  socket.on('error', () => { });
 }
 
 function scheduleReElection() {
@@ -534,12 +465,6 @@ function failProxyPending() {
   }
   proxyPending.clear();
 }
-
-// ---------------------------------------------------------------------------
-// Routing readiness — a call needs a live route (owner+extension, or
-// follower+owner). In steady state this resolves instantly; during a cold
-// start or a brief failover it parks the call up to ROUTE_GRACE_MS.
-// ---------------------------------------------------------------------------
 
 function hasRoute() {
   if (role === 'owner') {
@@ -575,12 +500,8 @@ function waitForRoute() {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Public primitive used by every tool.
-// ---------------------------------------------------------------------------
-
 export async function callExtension(action, params = {}) {
-  const activeRole = await waitForRoute();          // throws the clear error after the grace window
+  const activeRole = await waitForRoute();
   if (activeRole === 'owner') {
     return routeCall(action, params);
   }
@@ -591,7 +512,6 @@ export function isExtensionConnected() {
   return hasRoute();
 }
 
-// Lightweight introspection for logging / a future status tool.
 export function bridgeStatus() {
   const clients = getActiveClients();
   return {

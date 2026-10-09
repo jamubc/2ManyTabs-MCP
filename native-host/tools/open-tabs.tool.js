@@ -15,7 +15,7 @@ export const openTabsTool = {
     '  - opened (int): Number of tabs successfully opened',
   annotations: {
     readOnlyHint: false,
-    destructiveHint: false, // opening tabs is non-destructive
+    destructiveHint: false,
     idempotentHint: false,
     openWorldHint: true,
   },

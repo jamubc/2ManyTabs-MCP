@@ -43,7 +43,6 @@ export const closeTabsTool = {
   },
 
   execute: async ({ tab_ids, match, duplicates, dry_run, browser }) => {
-    // Enforce exactly one selection mode.
     const modes = [tab_ids?.length ? 'tab_ids' : null, match ? 'match' : null, duplicates ? 'duplicates' : null]
       .filter(Boolean);
     if (modes.length === 0) {

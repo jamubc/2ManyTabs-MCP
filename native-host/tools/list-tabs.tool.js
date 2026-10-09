@@ -49,7 +49,6 @@ export const listTabsTool = {
       tabs = tabs.filter((t) => dupIds.has(t.id));
     }
 
-    // Apply MAX_TAB_LIST limit to prevent token overflow
     if (tabs.length > MAX_TAB_LIST) {
       tabs = tabs.slice(0, MAX_TAB_LIST);
     }
