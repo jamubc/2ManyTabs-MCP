@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "internet-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/native-host/host.js"]
+    }
+  }
+}
