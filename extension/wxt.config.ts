@@ -28,7 +28,7 @@ export default defineConfig({
     ...(browser === 'firefox' ? {
       browser_specific_settings: {
         gecko: {
-          id: 'internet-mcp@jamubc.github.io',
+          id: '2manytabs-mcp@jamubc.github.io', // permanent - do not rebrand
           strict_min_version: '139.0',
           data_collection_permissions: { required: ['none'] },
         },

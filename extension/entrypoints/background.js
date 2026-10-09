@@ -1,4 +1,4 @@
-// 2ManyTabs MCP – Background entrypoint (Chrome MV3 service worker /
+// Internet MCP – Background entrypoint (Chrome MV3 service worker /
 // Firefox MV2 background script — WXT picks the right shape per target).
 //
 // MV3 service workers go idle and kill setTimeout callbacks, so we use

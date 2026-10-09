@@ -1,4 +1,4 @@
-// 2ManyTabs MCP – Extension Bridge (self-organizing, multi-host)
+// Internet MCP – Extension Bridge (self-organizing, multi-host)
 //
 // Why this exists
 // ----------------
@@ -36,7 +36,7 @@ const ROUTE_GRACE_MS  = 3_500;          // absorb brief owner↔follower failove
 const ALLOWED_EXTENSION_ORIGIN_PREFIXES = ['chrome-extension://', 'moz-extension://'];
 
 const EXT_NOT_CONNECTED_MSG =
-  'Chrome extension is not connected. Load the 2ManyTabs MCP extension in your browser ' +
+  'Browser extension is not connected. Load the Internet MCP extension in Chrome or Firefox ' +
   'and confirm its popup shows "Connected".';
 
 const PNA_HEADERS = {
