@@ -6,13 +6,13 @@
 
 # 2ManyTabs MCP
 
-An MCP server and browser extension that let AI clients list, script and close tabs in Chrome and Firefox.
+An MCP server & browser extension combo that let AI clients (with MCP support) manage your overflowing tabs, script for you, and organize (group, cleanup, ect)
 
 ## Install
 
 ### 1. Add the MCP server
 
-One command, no clone needed. This example uses Claude Code:
+One command. This example uses Claude Code:
 
 ```shell
 claude mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
@@ -38,13 +38,12 @@ Download the zip for your browser from the [latest release](https://github.com/j
 - Chrome and other Chromium browsers: unzip `2manytabs-mcp-extension-<version>-chrome.zip`, open `chrome://extensions`, turn on Developer mode, choose Load unpacked, and select the unzipped folder.
 - Firefox: open `about:debugging#/runtime/this-firefox`, choose Load Temporary Add-on, and select `2manytabs-mcp-extension-<version>-firefox.zip`. Firefox removes temporary add-ons when it closes.
 
-Open the extension. It shows Connected once your MCP client has started the server.
+If you would like this project to be signed and released through official channels (no more temporary loads), please consider supporting or opening an issue requesting it.
 
 ## Usage
 
-The host registers eleven tools. Tab ids can be numbers or `chrome:12` and `firefox:34` style ids. With several browsers connected, a bare number is refused when more than one browser owns it. The `browser` parameter narrows a call to one browser.
 
-| Tool | What it does |
+| Tool | Description |
 |---|---|
 | `list_tabs` | Lists open tabs across browsers, grouped by domain or window, with `query`, `duplicates_only` and `browser` filters |
 | `execute_script` | Runs JavaScript in a tab, in the `ISOLATED` or `MAIN` world, and returns the result |
@@ -58,7 +57,15 @@ The host registers eleven tools. Tab ids can be numbers or `chrome:12` and `fire
 | `ungroup_tabs` | Removes tabs from their groups |
 | `update_tab_group` | Changes a group's `title`, `color` or `collapsed` state |
 
-Tab group tools need Firefox 139 or newer on Firefox.
+## Compatibility
+
+| | Chrome and Chromium | Firefox |
+|---|---|---|
+| Tab tools | Yes | Yes |
+| Tab groups | Yes | 139 or newer |
+| `execute_script` | No, Chrome blocks it | Yes |
+
+Chrome and Firefox can be connected at the same time. The server needs Node.js 18 or newer and the free local port 9876, and works with any MCP client that can run a command (Claude Code, Claude Desktop, Cursor, VS Code and others).
 
 ## Develop from source
 
@@ -70,23 +77,6 @@ cd extension && npm install && npm run build && npm run build:firefox
 ```
 
 Claude Code picks up the server from `.mcp.json` when you open the repository. Load the extension from `extension/.output/chrome-mv3/` or `extension/.output/firefox-mv2/manifest.json`.
-
-## Project structure
-
-| Path | Purpose |
-|---|---|
-| `native-host/` | MCP server over stdio, the WebSocket bridge and the tool definitions, with unit tests |
-| `extension/` | WXT browser extension for Chrome (MV3) and Firefox (MV2) |
-| `docs/` | Architecture and security notes |
-| `install.sh` | Installs host dependencies and writes the launcher script |
-| `llms.txt` | Summary of the project for language models |
-| `CHANGELOG.md` | Release history |
-
-## Requirements
-
-- Node.js 18 or newer
-- Free loopback port 9876
-- Chrome or another Chromium browser, or Firefox
 
 ## License
 
