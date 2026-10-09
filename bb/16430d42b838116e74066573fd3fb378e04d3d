@@ -1,0 +1,23 @@
+extension/entrypoints/popup/index.html
+  s_21ac5e5b7bc523::t_1da3b847a8c50f 32-98,256-261,266
+  s_21ac5e5b7bc523::t_97bfe346c1dfd3 267
+extension/entrypoints/popup/main.js
+  s_21ac5e5b7bc523::t_23a9cc9b2e7527 3-7,9-16,19-21,23-27,52,54
+  s_21ac5e5b7bc523::t_1da3b847a8c50f 18,22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bb16430d42b838116e74066573fd3fb378e04d3d",
+  "prompts": {},
+  "sessions": {
+    "s_21ac5e5b7bc523": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a50636d-404a-44ef-a9a5-29d91e7e3c38",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
