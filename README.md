@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://github.com/jamubc/2ManyTabs-MCP">
+  <a href="https://github.com/jamubc/internet-mcp">
     <img alt="Internet MCP" width="240" src="extension/public/icon.png">
   </a>
 </div>
@@ -13,8 +13,8 @@ An MCP server and browser extension that let AI clients list, script and close t
 Clone the repo and install the host. `install.sh` runs on macOS and Linux. Then build the extension.
 
 ```shell
-git clone https://github.com/jamubc/2ManyTabs-MCP.git
-cd 2ManyTabs-MCP
+git clone https://github.com/jamubc/internet-mcp.git
+cd internet-mcp
 bash install.sh
 cd extension && npm install && npm run build && npm run build:firefox
 ```

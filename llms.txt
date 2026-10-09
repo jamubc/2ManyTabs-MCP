@@ -14,12 +14,12 @@ Important notes:
 
 ## Install
 
-- [Browser Extension](https://github.com/jamubc/2manytabs-mcp/tree/main/extension): Build with WXT (`cd extension && npm install && npm run build` for Chrome, `npm run build:firefox` for Firefox), then load the unpacked build from `.output/chrome-mv3/` (`chrome://extensions`, Developer mode, "Load unpacked") or `.output/firefox-mv2/` (`about:debugging#/runtime/this-firefox`, "Load Temporary Add-on…").
+- [Browser Extension](https://github.com/jamubc/internet-mcp/tree/main/extension): Build with WXT (`cd extension && npm install && npm run build` for Chrome, `npm run build:firefox` for Firefox), then load the unpacked build from `.output/chrome-mv3/` (`chrome://extensions`, Developer mode, "Load unpacked") or `.output/firefox-mv2/` (`about:debugging#/runtime/this-firefox`, "Load Temporary Add-on…").
 - [MCP Host via npx](https://www.npmjs.com/package/2manytabs-mcp-host): Run `npx -y 2manytabs-mcp-host`, no global install needed (also installs an `internet-mcp` command).
-- [Claude Code](https://github.com/jamubc/2manytabs-mcp): `claude mcp add internet-mcp -- npx -y 2manytabs-mcp-host`
-- [Claude Desktop](https://github.com/jamubc/2manytabs-mcp): Add to `claude_desktop_config.json` with command `npx` and args `["-y", "2manytabs-mcp-host"]`.
+- [Claude Code](https://github.com/jamubc/internet-mcp): `claude mcp add internet-mcp -- npx -y 2manytabs-mcp-host`
+- [Claude Desktop](https://github.com/jamubc/internet-mcp): Add to `claude_desktop_config.json` with command `npx` and args `["-y", "2manytabs-mcp-host"]`.
 - [VS Code / Copilot Chat](https://code.visualstudio.com/docs/copilot/customization/mcp-servers): Add to `.vscode/mcp.json` with the same command/args block.
-- [Cursor](https://github.com/jamubc/2manytabs-mcp): Add to `.cursor/mcp.json` or Settings → MCP.
+- [Cursor](https://github.com/jamubc/internet-mcp): Add to `.cursor/mcp.json` or Settings → MCP.
 - [Windsurf](https://windsurf.com/university/general-education/intro-to-mcp): Add to `mcp_config.json` or Settings → Cascade → MCP.
 - [Continue](https://docs.continue.dev/customize/mcp-tools): Add to `.continue/config.json` or `.continue/mcpServers/`.
 - [Cline](https://docs.cline.bot/mcp/mcp-overview): Add via the MCP Servers panel.
@@ -28,28 +28,28 @@ Important notes:
 
 ## Tools
 
-- [list_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/list-tabs.tool.js): Read open tabs across Chrome and Firefox. Returns a domain histogram with proportional bars plus a per-domain tab listing showing titles, pinned (📌), audible (🔊), and browser flags. Accepts `query`, `group_by`, `duplicates_only`, and `browser` filter. Read-only.
-- [execute_script](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/execute-script.tool.js): Execute JavaScript in an open tab and return serialized results. Accepts `tab_id` (numeric or composite `chrome:12`), `script` (JS string expression), `world` (`ISOLATED` or `MAIN`), and `browser` hint.
-- [close_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/close-tabs.tool.js): Close tabs across connected browsers by `tab_ids` (numbers or composite IDs), `match`, or `duplicates: true`. Supports `dry_run: true` and `browser` filter.
-- [open_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/open-tabs.tool.js): Open new tabs in the browser given an array of `urls` and optional target `browser`.
-- [list_tab_groups](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/list-tab-groups.tool.js): List all existing native Chrome Tab Groups in the current browser session. Returns IDs, titles, colors, collapsed states, and parent window IDs.
-- [group_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/group-tabs.tool.js): Group open Chrome tabs into native Chrome Tab Groups. Required: `tab_ids`. Optional: `group_id`, `title`, `color`.
-- [ungroup_tabs](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/ungroup-tabs.tool.js): Remove one or more open Chrome tabs from their current native Tab Groups. Required: `tab_ids`.
-- [update_tab_group](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/update-tab-group.tool.js): Update properties of an existing native Chrome Tab Group. Required: `group_id`. Optional: `title`, `color`, `collapsed`.
-- [activate_tab](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/activate-tab.tool.js): Bring a specific browser tab to the foreground and focus its window. Accepts `tab_id` and optional `browser`.
-- [update_tab](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/update-tab.tool.js): Modify properties of an open browser tab (`url`, `pinned`, `muted`). Accepts `tab_id` and optional `browser`.
-- [get_tab_text](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/tools/get-tab-text.tool.js): Extract the plain body text of a loaded browser tab via `scripting`. Required: `tab_id`.
+- [list_tabs](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/list-tabs.tool.js): Read open tabs across Chrome and Firefox. Returns a domain histogram with proportional bars plus a per-domain tab listing showing titles, pinned (📌), audible (🔊), and browser flags. Accepts `query`, `group_by`, `duplicates_only`, and `browser` filter. Read-only.
+- [execute_script](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/execute-script.tool.js): Execute JavaScript in an open tab and return serialized results. Accepts `tab_id` (numeric or composite `chrome:12`), `script` (JS string expression), `world` (`ISOLATED` or `MAIN`), and `browser` hint.
+- [close_tabs](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/close-tabs.tool.js): Close tabs across connected browsers by `tab_ids` (numbers or composite IDs), `match`, or `duplicates: true`. Supports `dry_run: true` and `browser` filter.
+- [open_tabs](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/open-tabs.tool.js): Open new tabs in the browser given an array of `urls` and optional target `browser`.
+- [list_tab_groups](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/list-tab-groups.tool.js): List all existing native Chrome Tab Groups in the current browser session. Returns IDs, titles, colors, collapsed states, and parent window IDs.
+- [group_tabs](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/group-tabs.tool.js): Group open Chrome tabs into native Chrome Tab Groups. Required: `tab_ids`. Optional: `group_id`, `title`, `color`.
+- [ungroup_tabs](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/ungroup-tabs.tool.js): Remove one or more open Chrome tabs from their current native Tab Groups. Required: `tab_ids`.
+- [update_tab_group](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/update-tab-group.tool.js): Update properties of an existing native Chrome Tab Group. Required: `group_id`. Optional: `title`, `color`, `collapsed`.
+- [activate_tab](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/activate-tab.tool.js): Bring a specific browser tab to the foreground and focus its window. Accepts `tab_id` and optional `browser`.
+- [update_tab](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/update-tab.tool.js): Modify properties of an open browser tab (`url`, `pinned`, `muted`). Accepts `tab_id` and optional `browser`.
+- [get_tab_text](https://github.com/jamubc/internet-mcp/blob/main/native-host/tools/get-tab-text.tool.js): Extract the plain body text of a loaded browser tab via `scripting`. Required: `tab_id`.
 
 ## Architecture
 
-- [Extension bridge](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/bridge.js): Multi-browser WebSocket bridge implementing client registry and owner/follower self-organization. Merges tabs from multiple browsers and routes tab-specific actions by ID or composite address.
-- [Extension background entrypoint](https://github.com/jamubc/2manytabs-mcp/blob/main/extension/entrypoints/background.js): WXT `defineBackground()` entrypoint. Identifies browser on connection and dispatches browser operations.
-- [Tab operations](https://github.com/jamubc/2manytabs-mcp/blob/main/extension/lib/tab-ops.js): Proxies `browser.tabs`, `browser.tabGroups`, and `browser.scripting` (including `executeScript`).
-- [Host entry point](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/host.js): MCP server bootstrap using `@modelcontextprotocol/sdk`. Registers tools from the `tools/` registry and connects over stdio.
+- [Extension bridge](https://github.com/jamubc/internet-mcp/blob/main/native-host/bridge.js): Multi-browser WebSocket bridge implementing client registry and owner/follower self-organization. Merges tabs from multiple browsers and routes tab-specific actions by ID or composite address.
+- [Extension background entrypoint](https://github.com/jamubc/internet-mcp/blob/main/extension/entrypoints/background.js): WXT `defineBackground()` entrypoint. Identifies browser on connection and dispatches browser operations.
+- [Tab operations](https://github.com/jamubc/internet-mcp/blob/main/extension/lib/tab-ops.js): Proxies `browser.tabs`, `browser.tabGroups`, and `browser.scripting` (including `executeScript`).
+- [Host entry point](https://github.com/jamubc/internet-mcp/blob/main/native-host/host.js): MCP server bootstrap using `@modelcontextprotocol/sdk`. Registers tools from the `tools/` registry and connects over stdio.
 
 ## Tab helpers
 
-- [tabs.js](https://github.com/jamubc/2manytabs-mcp/blob/main/native-host/lib/tabs.js): Pure helper functions shared by the read/filter tools: `domainOf`, `matchesQuery`, `findDuplicateIds`, `domainHistogram`, `groupByDomain`, `groupByWindow`, `compact`. Side-effect-free; all selection and grouping logic lives here so the extension stays focused on Chrome API calls.
+- [tabs.js](https://github.com/jamubc/internet-mcp/blob/main/native-host/lib/tabs.js): Pure helper functions shared by the read/filter tools: `domainOf`, `matchesQuery`, `findDuplicateIds`, `domainHistogram`, `groupByDomain`, `groupByWindow`, `compact`. Side-effect-free; all selection and grouping logic lives here so the extension stays focused on Chrome API calls.
 
 ## Optional
 
