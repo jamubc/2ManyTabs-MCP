@@ -1,0 +1,20 @@
+README.md
+  s_21ac5e5b7bc523::t_deb51413a1e037 142-143
+  s_21ac5e5b7bc523::t_55a60ba3136620 154-155
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8fc83ba1c57d64c2e45ae296520db2eb87ac47b1",
+  "prompts": {},
+  "sessions": {
+    "s_21ac5e5b7bc523": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a50636d-404a-44ef-a9a5-29d91e7e3c38",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
