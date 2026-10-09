@@ -1,0 +1,27 @@
+extension/entrypoints/background.js
+  s_7f6d7719be1bc2::t_10c2d326e1120f 77,101
+extension/wxt.config.ts
+  s_7f6d7719be1bc2::t_5f08eadc5e315f 19
+native-host/bridge.js
+  s_7f6d7719be1bc2::t_acfbb63c4c93a4 4-5,7,26,30-39,55,105,174,202,432,434,504
+native-host/lib/tabs.test.js
+  s_7f6d7719be1bc2::t_87e76ef4f716ba 391
+native-host/tools/open-tabs.tool.js
+  s_7f6d7719be1bc2::t_62ad9a91de62d8 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "938324c5bed4b5c2ceac069d832a8d49b20dc82d",
+  "prompts": {},
+  "sessions": {
+    "s_7f6d7719be1bc2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a24bf05faaf3f31cd",
+        "model": "unknown"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
