@@ -1,0 +1,29 @@
+native-host/test/multibrowser.js
+  s_21ac5e5b7bc523::t_bcf708dbc526db 26,29-31,62,108-109
+  s_21ac5e5b7bc523::t_b6634067943337 110
+extension/entrypoints/background.js
+  s_21ac5e5b7bc523::t_d52e941f2cb70c 68-71
+native-host/bridge.js
+  s_21ac5e5b7bc523::t_98056068ddc21b 257,269,273-277,358-359,384-385
+  s_21ac5e5b7bc523::t_a62f694779a509 239,397,405
+extension/entrypoints/popup/main.js
+  s_21ac5e5b7bc523::t_4e632b8fda5b09 3-19,32-33,35-36,54-57,60,64-65,75-77,84-99,101-110,112-117,119-124,126-128,130-138,143-172,176-186
+extension/entrypoints/popup/index.html
+  s_21ac5e5b7bc523::t_c8071a57e857eb 8-20,25,27-29,33,36-41,44-48,51-57,60-69,72,74-76,79-81,84-90,93-96,99-102,105-107,109-112,115-119,122-124,127-131,134,136,141,145,149,152-153,155,158,162,164-190,197,203-205,215,217-219,221,223,227,229,233-234,245,250-251,253-257,260-262,266-269,274,279-282
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "43375334aedb6702a8e3f1356cebd7c748cb2eae",
+  "prompts": {},
+  "sessions": {
+    "s_21ac5e5b7bc523": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a50636d-404a-44ef-a9a5-29d91e7e3c38",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
