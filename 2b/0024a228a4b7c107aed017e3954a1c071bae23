@@ -1,0 +1,19 @@
+README.md
+  s_21ac5e5b7bc523::t_91710d810fddb9 23-30,53,86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2b0024a228a4b7c107aed017e3954a1c071bae23",
+  "prompts": {},
+  "sessions": {
+    "s_21ac5e5b7bc523": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a50636d-404a-44ef-a9a5-29d91e7e3c38",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
