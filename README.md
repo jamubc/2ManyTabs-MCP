@@ -137,7 +137,7 @@ Ask your agent in plain words. Some things to try:
 | Tab groups | Yes | 139 or newer |
 | `execute_script` | No, returns an error | Yes |
 
-Chrome and Firefox can be connected at the same time. Brave, Edge and Opera use the Chrome build. The server needs Node.js 18 or newer and the free local port 9876.
+Chrome and Firefox can be connected at the same time. Brave, Edge and Opera use the Chrome build.
 
 ## Develop from source
 
