@@ -22,8 +22,13 @@ const chromeExt = new WebSocket(`ws://127.0.0.1:${PORT}/?browser=chrome&name=Chr
   origin: 'chrome-extension://mock-chrome-id',
 });
 
+const chromeStatus = [];
 chromeExt.on('message', (raw) => {
   const msg = JSON.parse(raw);
+  if (msg.type === 'status') {
+    chromeStatus.push(msg);
+    return;
+  }
   if (msg.action === 'query_tabs') {
     chromeExt.send(JSON.stringify({
       id: msg.id,
@@ -54,6 +59,7 @@ const firefoxExt = new WebSocket(`ws://127.0.0.1:${PORT}/?browser=firefox&name=F
 
 firefoxExt.on('message', (raw) => {
   const msg = JSON.parse(raw);
+  if (msg.type === 'status') return;
   if (msg.action === 'query_tabs') {
     firefoxExt.send(JSON.stringify({
       id: msg.id,
@@ -92,8 +98,16 @@ assert(firefoxTabs.length === 2, 'Firefox tabs tagged with browser: firefox');
 const resFirefox = await callExtension('execute_script', { tab_id: 'firefox:20', script: 'return 1;' });
 assert(resFirefox?.result === 'Executed in Firefox tab 20', 'Targeted call routed to Firefox tab 20 via composite ID');
 
-const resChrome = await callExtension('execute_script', { tab_id: 11, script: 'return 2;' });
-assert(resChrome?.result === 'Executed in Chrome tab 11', 'Targeted call auto-routed to Chrome tab 11 via tab cache');
+const resChrome = await callExtension('activate_tab', { tab_id: 11 });
+assert(resChrome?.success === true, 'Targeted call auto-routed to Chrome tab 11 via tab cache');
+
+let chromeErr = null;
+try { await callExtension('execute_script', { tab_id: 'chrome:11', script: '1' }); } catch (e) { chromeErr = e; }
+assert(/not available in Chrome/.test(chromeErr?.message), 'execute_script on a Chrome tab is refused with a clear message');
+
+const lastStatus = chromeStatus.at(-1);
+assert(lastStatus?.self === 'chrome_inst' && lastStatus?.agents === 1, 'Status tells Chrome who it is and how many agents are connected');
+assert(lastStatus?.browsers.map((b) => b.browser).sort().join(',') === 'chrome,firefox', 'Status lists both connected browsers');
 
 // 4b. Safety: never guess the browser
 let err = null;

@@ -39,6 +39,10 @@ const EXT_NOT_CONNECTED_MSG =
   'Browser extension is not connected. Load the Internet MCP extension in Chrome or Firefox ' +
   'and confirm its popup shows "Connected".';
 
+const CHROME_NO_SCRIPTING_MSG =
+  'Sorry, scripting is not available in Chrome: its extension rules block running script text. ' +
+  'Open the page in Firefox and use its firefox: tab id instead.';
+
 const PNA_HEADERS = {
   'Access-Control-Allow-Origin':          '*',
   'Access-Control-Allow-Private-Network': 'true',
@@ -186,6 +190,7 @@ function handleExtensionConnection(socket, req) {
   extensionClients.set(clientId, client);
   log(`Extension connected: ${name} (${browser}) [${clientId}]. Total active: ${extensionClients.size}`);
   flushReady();
+  broadcastStatus();
 
   socket.on('message', (raw) => {
     let msg;
@@ -215,6 +220,7 @@ function handleExtensionConnection(socket, req) {
       for (const index of [tabClientIndex, groupClientIndex]) forgetClient(index, clientId);
     }
     log(`Extension disconnected: ${name} [${clientId}]. Remaining: ${extensionClients.size}`);
+    broadcastStatus();
   });
 
   socket.on('error', () => { /* close handles cleanup */ });
@@ -223,6 +229,7 @@ function handleExtensionConnection(socket, req) {
 function handlePeerConnection(socket) {
   peerClients.add(socket);
   log(`Follower host connected (${peerClients.size} active)`);
+  broadcastStatus();
 
   socket.on('message', async (raw) => {
     let msg;
@@ -240,7 +247,10 @@ function handlePeerConnection(socket) {
     }
   });
 
-  socket.on('close', () => { peerClients.delete(socket); });
+  socket.on('close', () => {
+    peerClients.delete(socket);
+    broadcastStatus();
+  });
   socket.on('error', () => { /* close handles cleanup */ });
 }
 
@@ -257,6 +267,15 @@ function sendToClient(client, action, params = {}) {
     inflight.set(id, { socket: client.socket, resolve, reject, timer });
     client.socket.send(JSON.stringify({ id, action, ...params }));
   });
+}
+
+function broadcastStatus() {
+  const clients = getActiveClients();
+  const browsers = clients.map((c) => ({ id: c.id, browser: c.browser, name: c.name }));
+  const agents = 1 + peerClients.size;
+  for (const c of clients) {
+    c.socket.send(JSON.stringify({ type: 'status', self: c.id, agents, browsers }));
+  }
 }
 
 function getActiveClients() {
@@ -416,6 +435,9 @@ async function routeCall(action, params = {}) {
 
   if (params.tab_id !== undefined) {
     const { client, cleanId } = resolveTarget(params.tab_id, params.browser, tabClientIndex);
+    if (action === 'execute_script' && client.browser === 'chrome') {
+      throw new Error(CHROME_NO_SCRIPTING_MSG);
+    }
     return sendToClient(client, action, withoutBrowser(params, { tab_id: cleanId }));
   }
 

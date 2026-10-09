@@ -9,6 +9,7 @@ export const executeScriptTool = {
   description:
     'Execute a JavaScript expression or script in the context of an open browser tab and return the serialized result. ' +
     'Useful for pulling elements from pages (e.g. images, links, tables, article bodies), clicking elements, or extracting dynamic DOM state. ' +
+    'Firefox only: Chrome tabs return an error, so use a firefox: tab id. ' +
     'Fails on restricted system URLs (e.g. chrome://, about:, extensions).',
   annotations: {
     readOnlyHint: false,

@@ -5,7 +5,7 @@ export const openTabsTool = {
   name: 'open_tabs',
   title: 'Open Tabs',
   description:
-    'Open one or more URLs in new Chrome tabs. This tool allows you to navigate the user to ' +
+    'Open one or more URLs in new browser tabs. This tool allows you to navigate the user to ' +
     'specific web pages or search queries.\n\n' +
     'Examples:\n' +
     '- {"urls": ["https://github.com", "https://youtube.com"]}\n' +

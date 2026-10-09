@@ -10,7 +10,7 @@ export const listTabsTool = {
   name: 'list_tabs',
   title: 'List Tabs',
   description:
-    'Read open Chrome tabs. Returns a domain histogram (the fastest way to understand a large ' +
+    'Read open browser tabs. Returns a domain histogram (the fastest way to understand a large ' +
     'tab set) plus a detailed view. When summarizing the results for the user, you should ' +
     'include the histogram bar graph in your response. Filter with `query`, reshape with ' +
     '`group_by`, or isolate redundant tabs with `duplicates_only`. Read-only — never closes anything.',

@@ -6,7 +6,7 @@ export const closeTabsTool = {
   name: 'close_tabs',
   title: 'Close Tabs',
   description:
-    'Close Chrome tabs by one selection mode: `tab_ids` (explicit), `match` (substring of ' +
+    'Close browser tabs by one selection mode: `tab_ids` (explicit), `match` (substring of ' +
     'title/URL), or `duplicates` (every tab sharing a URL with an earlier one). Set `dry_run` ' +
     'to preview the exact tabs that would close without touching them. Destructive — closed ' +
     'tabs cannot be recovered through this tool.\n\n' +
