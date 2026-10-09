@@ -4,8 +4,8 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   srcDir: '.',
   manifest: ({ browser }) => ({
-    name: 'Internet MCP',
-    description: 'Bridge your live browser to AI via MCP: run scripts, triage tabs, inspect and automate across Chrome & Firefox.',
+    name: '2ManyTabs MCP',
+    description: 'Expose your browser tabs to AI via MCP: sort 1000 tabs with Claude.',
     // tabGroups landed in Firefox 138+ (tabs.group/ungroup) and 139+
     // (tabGroups.query/get/update) - feature-detected in lib/tab-ops.js as a
     // belt-and-suspenders check, but the permission is real on both browsers now.
@@ -41,7 +41,7 @@ export default defineConfig({
     },
     action: {
       default_popup: 'popup.html',
-      default_title: 'Internet MCP',
+      default_title: '2ManyTabs MCP',
       default_icon: {
         16: 'icon16.png',
         48: 'icon48.png',

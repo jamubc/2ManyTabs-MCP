@@ -1,11 +1,10 @@
 {
   "name": "2manytabs-mcp-host",
   "version": "3.0.0",
-  "description": "Internet MCP: universal Live Browser MCP Server for Chrome, Firefox, and all open windows & tabs",
+  "description": "MCP server that exposes Chrome and Firefox tabs via the 2ManyTabs MCP extension",
   "type": "module",
   "main": "host.js",
   "bin": {
-    "internet-mcp": "host.js",
     "2manytabs-mcp": "host.js"
   },
   "files": [

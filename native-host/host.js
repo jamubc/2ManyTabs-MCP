@@ -4,7 +4,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { startBridge } from './bridge.js';
 import { toolRegistry } from './tools/index.js';
 
-const server = new McpServer({ name: 'internet-mcp', version: '3.0.0' });
+const server = new McpServer({ name: '2manytabs-mcp', version: '3.0.0' });
 
 for (const tool of toolRegistry) {
   server.registerTool(
@@ -33,7 +33,7 @@ startBridge();
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write(`[internet-mcp] MCP server ready (${toolRegistry.length} tools) on stdio\n`);
+process.stderr.write(`[2manytabs-mcp] MCP server ready (${toolRegistry.length} tools) on stdio\n`);
 
 const cleanup = () => process.exit(0);
 process.stdin.on('close', cleanup);

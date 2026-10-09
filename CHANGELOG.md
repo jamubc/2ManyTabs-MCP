@@ -4,9 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [3.0.0] - 2026-10-09
 
-### Rebrand
-- Renamed from **2ManyTabs MCP** to **Internet MCP**, and the repository to `jamubc/internet-mcp` (GitHub redirects the old address). The npm package stays `2manytabs-mcp-host` so existing installs update, and it adds an `internet-mcp` command next to `2manytabs-mcp`. The Firefox add-on id is unchanged.
-
 ### Added
 - **Several browsers at once.** Chrome and Firefox (and several profiles) can connect together. Tabs carry ids like `chrome:12` and `firefox:34`, and every call goes to the browser that owns the tab.
 - **`execute_script`** runs JavaScript in a Firefox tab and returns the result. Chrome tabs get a clear error, because Chrome's extension rules block running script text.

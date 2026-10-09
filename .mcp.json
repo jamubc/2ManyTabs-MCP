@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "internet-mcp": {
+    "2manytabs-mcp": {
       "type": "stdio",
       "command": "node",
       "args": ["${CLAUDE_PROJECT_DIR:-.}/native-host/host.js"]

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Internet MCP – Install Script
+# 2ManyTabs MCP – Install Script
 # Usage: bash install.sh
 
 set -euo pipefail
@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOST_DIR="$SCRIPT_DIR/native-host"
 
 echo ""
-echo "☄️  Internet MCP – Installer"
+echo "☄️  2ManyTabs MCP – Installer"
 echo "=============================="
 
 # ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ echo "📋  EXAMPLE: Add this to your Claude Desktop config"
 echo "    (usually ~/Library/Application Support/Claude/claude_desktop_config.json)"
 echo ""
 echo '    "mcpServers": {'
-echo '      "internet-mcp": {'
+echo '      "2manytabs-mcp": {'
 echo "        \"command\": \"$WRAPPER\""
 echo '      }'
 echo '    }'

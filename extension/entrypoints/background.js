@@ -1,4 +1,4 @@
-// Internet MCP – Background entrypoint (Chrome MV3 service worker /
+// 2ManyTabs MCP – Background entrypoint (Chrome MV3 service worker /
 // Firefox MV2 background script — WXT picks the right shape per target).
 //
 // MV3 service workers go idle and kill setTimeout callbacks, so we use
@@ -11,7 +11,7 @@ import {
 } from '../lib/tab-ops.js';
 
 const WS_URL = 'ws://127.0.0.1:9876';
-const ALARM_NAME = 'internet-mcp-reconnect';
+const ALARM_NAME = '2manytabs-mcp-reconnect';
 const BROWSER_TYPE = (typeof import.meta !== 'undefined' && import.meta.env?.BROWSER) ? import.meta.env.BROWSER : 'chrome';
 const INSTANCE_ID = `${BROWSER_TYPE}_${Math.random().toString(36).slice(2, 8)}`;
 

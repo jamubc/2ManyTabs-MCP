@@ -1,4 +1,4 @@
-// Internet MCP – Extension Bridge (self-organizing, multi-host)
+// 2ManyTabs MCP – Extension Bridge (self-organizing, multi-host)
 //
 // Why this exists
 // ----------------
@@ -36,7 +36,7 @@ const ROUTE_GRACE_MS  = 3_500;          // absorb brief owner↔follower failove
 const ALLOWED_EXTENSION_ORIGIN_PREFIXES = ['chrome-extension://', 'moz-extension://'];
 
 const EXT_NOT_CONNECTED_MSG =
-  'Browser extension is not connected. Load the Internet MCP extension in Chrome or Firefox ' +
+  'Browser extension is not connected. Load the 2ManyTabs MCP extension in Chrome or Firefox ' +
   'and confirm its popup shows "Connected".';
 
 const CHROME_NO_SCRIPTING_MSG =
@@ -76,7 +76,7 @@ const readyWaiters  = [];
 
 function log(msg) {
   // stderr only — stdout is reserved for the MCP stdio transport.
-  process.stderr.write(`[internet-mcp] ${msg}\n`);
+  process.stderr.write(`[2manytabs-mcp] ${msg}\n`);
 }
 
 // ---------------------------------------------------------------------------
@@ -102,7 +102,7 @@ function attemptBind() {
       return;
     }
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Internet MCP host running\n');
+    res.end('2ManyTabs MCP host running\n');
   });
 
   httpServer.on('error', (err) => {

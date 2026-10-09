@@ -1,10 +1,10 @@
 <div align="center">
-  <a href="https://github.com/jamubc/internet-mcp">
-    <img alt="Internet MCP" width="240" src="extension/public/icon.png">
+  <a href="https://github.com/jamubc/2ManyTabs-MCP">
+    <img alt="2ManyTabs MCP" width="240" src="extension/public/icon.png">
   </a>
 </div>
 
-# Internet MCP
+# 2ManyTabs MCP
 
 An MCP server and browser extension that let AI clients list, script and close tabs in Chrome and Firefox.
 
@@ -13,8 +13,8 @@ An MCP server and browser extension that let AI clients list, script and close t
 Clone the repo and install the host. `install.sh` runs on macOS and Linux. Then build the extension.
 
 ```shell
-git clone https://github.com/jamubc/internet-mcp.git
-cd internet-mcp
+git clone https://github.com/jamubc/2ManyTabs-MCP.git
+cd 2ManyTabs-MCP
 bash install.sh
 cd extension && npm install && npm run build && npm run build:firefox
 ```
@@ -24,7 +24,7 @@ cd extension && npm install && npm run build && npm run build:firefox
 Register the host with your MCP client from the repo root. This example uses Claude Code. Any client that runs a stdio command works with the same `node` command and path.
 
 ```shell
-claude mcp add internet-mcp -- node "$PWD/native-host/host.js"
+claude mcp add 2manytabs-mcp -- node "$PWD/native-host/host.js"
 ```
 
 ### Load the extension
