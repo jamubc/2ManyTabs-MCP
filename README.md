@@ -1,10 +1,17 @@
 <div align="center">
   <a href="https://github.com/jamubc/2ManyTabs-MCP">
-    <img alt="2ManyTabs MCP" width="240" src="extension/public/icon.png">
+    <img alt="2ManyTabs MCP" width="240" src="docs/logo.png">
   </a>
 </div>
 
 # 2ManyTabs MCP
+
+![Chrome](https://img.shields.io/badge/Chrome-4285F4?logo=googlechrome&logoColor=white)
+![Firefox](https://img.shields.io/badge/Firefox-FF7139?logo=firefoxbrowser&logoColor=white)
+![LibreWolf](https://img.shields.io/badge/LibreWolf-00ACFF?logo=librewolf&logoColor=white)
+![Brave](https://img.shields.io/badge/Brave-FB542B?logo=brave&logoColor=white)
+![Edge](https://img.shields.io/badge/Edge-0078D7)
+![Opera](https://img.shields.io/badge/Opera-FF1B2D?logo=opera&logoColor=white)
 
 An MCP server & browser extension combo that let AI clients (with MCP support) manage your overflowing tabs, script for you, and organize (group, cleanup, ect)
 
