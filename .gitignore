@@ -33,3 +33,7 @@ Thumbs.db
 
 # Local MCP client config (machine-specific paths)
 /mcp.json
+
+# Copied in by npm prepack
+/native-host/README.md
+/native-host/LICENSE

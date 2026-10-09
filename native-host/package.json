@@ -7,6 +7,12 @@
   "bin": {
     "2manytabs-mcp": "host.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamubc/2ManyTabs-MCP.git",
+    "directory": "native-host"
+  },
+  "homepage": "https://github.com/jamubc/2ManyTabs-MCP#readme",
   "files": [
     "host.js",
     "bridge.js",
@@ -17,7 +23,9 @@
     "start": "node host.js",
     "test":  "node --test lib/tabs.test.js lib/background.test.js",
     "test:multibrowser": "MANYTABS_BRIDGE_PORT=19878 node test/multibrowser.js",
-    "lint":  "eslint ."
+    "lint":  "eslint .",
+    "prepack": "cp ../README.md ../LICENSE .",
+    "postpack": "rm -f README.md LICENSE"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
