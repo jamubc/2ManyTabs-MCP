@@ -1,6 +1,3 @@
-// Follower-path test: when the port is already held, a host must become a
-// FOLLOWER and proxy its tool calls through the owner. Run on a scratch port:
-//   MANYTABS_BRIDGE_PORT=19876 node test/follower.js
 import http from 'http';
 import { WebSocketServer } from 'ws';
 
@@ -9,7 +6,6 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
 const assert = (cond, msg) => { console.error(cond ? '  ✓' : '  ✗', msg); if (!cond) failures++; };
 
-// Stand up a FAKE OWNER that already holds the port and speaks the peer protocol.
 const httpServer = http.createServer((req, res) => { res.writeHead(200); res.end('ok'); });
 const wss = new WebSocketServer({ server: httpServer });
 let sawPeer = false;
@@ -25,7 +21,6 @@ wss.on('connection', (socket, req) => {
 });
 await new Promise((r) => httpServer.listen(PORT, '127.0.0.1', r));
 
-// Import the bridge AFTER the port is taken so startBridge() hits EADDRINUSE.
 const { startBridge, callExtension, bridgeStatus } = await import('../bridge.js');
 startBridge();
 await sleep(400);

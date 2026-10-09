@@ -1,7 +1,3 @@
-// Tool registry — the single place that knows which tools exist.
-// To add a tool: create ./my-thing.tool.js exporting a tool object, then add it here.
-// host.js handles all SDK wiring (schema generation, validation, dispatch) generically.
-
 import { listTabsTool }  from './list-tabs.tool.js';
 import { closeTabsTool } from './close-tabs.tool.js';
 import { openTabsTool }  from './open-tabs.tool.js';
@@ -12,6 +8,7 @@ import { updateTabGroupTool } from './update-tab-group.tool.js';
 import { activateTabTool } from './activate-tab.tool.js';
 import { updateTabTool } from './update-tab.tool.js';
 import { getTabTextTool } from './get-tab-text.tool.js';
+import { executeScriptTool } from './execute-script.tool.js';
 
 export const toolRegistry = [
   listTabsTool,
@@ -24,4 +21,5 @@ export const toolRegistry = [
   activateTabTool,
   updateTabTool,
   getTabTextTool,
+  executeScriptTool,
 ];

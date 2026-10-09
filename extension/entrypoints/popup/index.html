@@ -5,137 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>2ManyTabs MCP</title>
   <style>
+    :root {
+      --ink: #0e1013;
+      --ink-raised: #16191e;
+      --bay: #090a0c;
+      --line: #262a31;
+      --text: #efece6;
+      --muted: #9a958b;
+      --faint: #6b675f;
+      --amber: #ffb547;
+      --amber-dim: rgba(255, 181, 71, 0.3);
+      --ice: #9ad8ff;
+      --ice-dim: rgba(154, 216, 255, 0.22);
+      --red: #ff6b5b;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       width: 260px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       font-size: 13px;
-      background: #07080c;
-      color: #cbd5e1;
-      padding: 24px 20px 20px 20px;
+      background: radial-gradient(120% 90% at 50% 0%, var(--ink-raised) 0%, var(--ink) 70%);
+      color: var(--muted);
+      padding: 16px 16px 14px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
-      overflow: hidden;
       position: relative;
-    }
-
-    .eye-container {
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .vision-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 28px;
-      user-select: none;
-    }
-
-    .vision-eyebrow {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: #888;
-      font-weight: 600;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-
-    .vision-main {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-    }
-
-    .tab-count-value {
-      font-size: 38px;
-      font-weight: 800;
-      background: linear-gradient(135deg, #00f2fe 0%, #c084fc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      line-height: 1;
-    }
-
-    .vision-tabs-text {
-      font-size: 18px;
-      font-weight: 700;
-      color: #e2e8f0;
-    }
-
-    .pill {
-      font-size: 11px;
-      color: #94a3b8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin: 0;
-      font-weight: 500;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    .status-value {
-      font-weight: 600;
-    }
-
-    /* Connected state styling */
-    .pill.connected .status-value {
-      color: #00ffff;
-    }
-
-    .pill.connected .status-dot {
-      background: #00ffff;
-    }
-
-    /* Disconnected state styling */
-    .pill.disconnected .status-value {
-      color: #ff5353;
-    }
-
-    .pill.disconnected .status-dot {
-      background: #ff5353;
-    }
-
-    .footer {
-      width: 100%;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 16px;
-      margin-top: 4px;
-    }
-
-    .links-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-    }
-
-    .support-link {
-      color: #888;
-      text-decoration: none;
-      transition: color 0.2s ease;
-      font-weight: 500;
-    }
-
-    .support-link:hover {
-      color: #cbd5e1;
+      overflow: hidden;
     }
 
     .toggle-container {
       position: absolute;
-      top: 16px;
+      top: 14px;
       right: 16px;
       width: 28px;
       height: 16px;
@@ -151,9 +53,9 @@
     .toggle-slider {
       position: absolute;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #334155;
-      transition: .3s;
+      inset: 0;
+      background-color: var(--line);
+      transition: background-color 0.2s ease;
       border-radius: 16px;
     }
 
@@ -164,46 +66,230 @@
       width: 12px;
       left: 2px;
       bottom: 2px;
-      background-color: #cbd5e1;
-      transition: .3s;
+      background-color: var(--muted);
+      transition: transform 0.2s ease;
       border-radius: 50%;
     }
 
-    .toggle-input:checked + .toggle-slider {
-      background-color: #00ffff;
-    }
+    .toggle-input:checked + .toggle-slider { background-color: var(--amber); }
 
     .toggle-input:checked + .toggle-slider:before {
       transform: translateX(12px);
-      background-color: #07080c;
+      background-color: var(--ink);
     }
+
+    .toggle-input:focus-visible + .toggle-slider {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+
+    .bay {
+      margin-top: 26px;
+      padding: 10px 6px 8px;
+      background: var(--bay);
+      border: 1px solid var(--line);
+      box-shadow: inset 0 10px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .link-map svg {
+      display: block;
+      width: 100%;
+      overflow: visible;
+    }
+
+    .link {
+      fill: none;
+      stroke-width: 1.5;
+      transition: stroke 0.6s ease, stroke-width 0.6s ease;
+    }
+
+    .link.agent { stroke: var(--amber-dim); }
+    .link.browser { stroke: var(--ice-dim); }
+    .link.browser.here { stroke: rgba(154, 216, 255, 0.55); }
+
+    .link.agent.firing {
+      stroke: var(--amber);
+      stroke-width: 2;
+      transition: none;
+    }
+
+    .link.browser.firing,
+    .link.browser.hot {
+      stroke: var(--ice);
+      stroke-width: 2;
+      transition: none;
+    }
+
+    .link-map:not(.live) .link {
+      stroke: var(--line);
+      stroke-dasharray: 3 4;
+    }
+
+    .node-dot.agent { fill: var(--amber); }
+    .node-dot.browser { fill: var(--faint); }
+    .node-dot.browser.here { fill: var(--ice); }
+    .link-map:not(.live) .node-dot { fill: var(--line); }
+
+    .halo {
+      fill: none;
+      stroke: var(--ice);
+      stroke-width: 1;
+      opacity: 0.45;
+    }
+
+    .node-label {
+      font-size: 11px;
+      fill: var(--faint);
+    }
+
+    .node-label.here {
+      fill: var(--text);
+      font-weight: 600;
+    }
+
+    .node.browser:hover .node-label { fill: var(--text); }
+
+    .eye-frame {
+      fill: var(--ink);
+      stroke: var(--line);
+      stroke-width: 2;
+      transition: stroke 0.6s ease;
+    }
+
+    .live .eye-frame { stroke: #3a3f48; }
+
+    .eye-pupil {
+      fill: none;
+      stroke: var(--amber);
+      stroke-width: 2;
+      transition: filter 0.6s ease;
+    }
+
+    .eye.firing .eye-frame {
+      stroke: var(--amber);
+      transition: none;
+    }
+
+    .eye.firing .eye-pupil {
+      filter: drop-shadow(0 0 4px var(--amber));
+      transition: none;
+    }
+
+    .pulse.agent { fill: #ffe3b3; }
+    .pulse.browser { fill: #e3f4ff; }
+
+    .last-call {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--faint);
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .last-call strong {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .vision-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px 0 18px;
+      user-select: none;
+    }
+
+    .vision-eyebrow {
+      font-size: 11px;
+      color: var(--faint);
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .vision-main {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .tab-count-value {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      line-height: 1.1;
+    }
+
+    .vision-tabs-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .footer {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+
+    .links-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .support-link {
+      color: var(--faint);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .support-link:hover,
+    .support-link:focus-visible { color: var(--text); }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .pill.connected { color: var(--amber); }
+    .pill.connected .status-dot { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    .pill.disconnected { color: var(--red); }
+    .pill.disconnected .status-dot { background: var(--red); }
   </style>
 </head>
 
 <body>
-  <label class="toggle-container" aria-label="Toggle MCP">
+  <label class="toggle-container" aria-label="Turn the MCP connection on or off">
     <input type="checkbox" id="powerToggle" class="toggle-input" checked>
     <span class="toggle-slider"></span>
   </label>
 
-  <div class="eye-container">
-    <svg class="robot-eye" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="6" width="18" height="12" rx="3" />
-      <circle cx="12" cy="12" r="3" stroke="#00f2fe" />
-    </svg>
+  <div class="bay">
+    <div class="link-map" id="linkMap" role="img" aria-label="Connection map"></div>
+    <div class="last-call" id="lastCall" aria-live="polite"></div>
   </div>
 
   <div class="vision-container">
     <div class="vision-eyebrow">MCP can see</div>
     <div class="vision-main">
       <span class="tab-count-value" id="tabCount">–</span>
-      <span class="vision-tabs-text">Tabs</span>
+      <span class="vision-tabs-text" id="tabWord">Tabs</span>
     </div>
   </div>
 
   <div class="footer">
     <div class="links-row">
-      <a href="https://github.com/jamubc/2manytabs-mcp" target="_blank" class="support-link">Github</a>
+      <a href="https://github.com/jamubc/2ManyTabs-MCP" target="_blank" class="support-link">Github</a>
       <div class="pill disconnected" id="statusPill">
         <span class="status-dot"></span>
         <span class="status-value" id="statusText">Disconnected</span>

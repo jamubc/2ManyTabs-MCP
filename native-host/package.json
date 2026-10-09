@@ -1,7 +1,7 @@
 {
   "name": "2manytabs-mcp-host",
-  "version": "2.1.0",
-  "description": "MCP server that exposes Chrome tabs via the 2ManyTabs MCP extension",
+  "version": "3.0.0",
+  "description": "MCP server that exposes Chrome and Firefox tabs via the 2ManyTabs MCP extension",
   "type": "module",
   "main": "host.js",
   "bin": {
@@ -16,6 +16,7 @@
   "scripts": {
     "start": "node host.js",
     "test":  "node --test lib/tabs.test.js lib/background.test.js",
+    "test:multibrowser": "MANYTABS_BRIDGE_PORT=19878 node test/multibrowser.js",
     "lint":  "eslint ."
   },
   "devDependencies": {

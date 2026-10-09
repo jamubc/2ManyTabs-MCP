@@ -1,14 +1,10 @@
 import { defineConfig } from 'wxt';
 
-// See https://wxt.dev/api/config.html
 export default defineConfig({
   srcDir: '.',
   manifest: ({ browser }) => ({
     name: '2ManyTabs MCP',
-    description: 'Expose Chrome tabs to AI via MCP – sort 1000 tabs with Claude.',
-    // tabGroups landed in Firefox 138+ (tabs.group/ungroup) and 139+
-    // (tabGroups.query/get/update) - feature-detected in lib/tab-ops.js as a
-    // belt-and-suspenders check, but the permission is real on both browsers now.
+    description: 'Expose your browser tabs to AI via MCP: sort 1000 tabs with Claude.',
     permissions: [
       'tabs',
       'storage',
@@ -16,15 +12,7 @@ export default defineConfig({
       'scripting',
       'tabGroups',
     ],
-    // *://*/* (not <all_urls>) so get_tab_text's scripting.executeScript can
-    // reach ordinary http(s) tabs; it already refuses chrome://-style pages.
     host_permissions: ['http://localhost/*', 'http://127.0.0.1/*', '*://*/*'],
-    // Firefox-only: a permanent add-on id (can't change after first AMO submission)
-    // plus the data-collection disclosure AMO requires on new listings. Nothing the
-    // extension sees ever leaves the machine - it only talks to the local MCP host
-    // over loopback - so this is a straight "none" declaration.
-    // strict_min_version: 139 is required for tabGroups.query/update, which
-    // native-host/tools/list-tabs.tool.js and list-tab-groups.tool.js depend on.
     ...(browser === 'firefox' ? {
       browser_specific_settings: {
         gecko: {

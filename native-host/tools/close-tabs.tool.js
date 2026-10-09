@@ -6,7 +6,7 @@ export const closeTabsTool = {
   name: 'close_tabs',
   title: 'Close Tabs',
   description:
-    'Close Chrome tabs by one selection mode: `tab_ids` (explicit), `match` (substring of ' +
+    'Close browser tabs by one selection mode: `tab_ids` (explicit), `match` (substring of ' +
     'title/URL), or `duplicates` (every tab sharing a URL with an earlier one). Set `dry_run` ' +
     'to preview the exact tabs that would close without touching them. Destructive — closed ' +
     'tabs cannot be recovered through this tool.\n\n' +
@@ -30,18 +30,19 @@ export const closeTabsTool = {
     openWorldHint: true,
   },
   inputSchema: {
-    tab_ids: z.array(z.number().int()).optional()
-      .describe('Explicit tab IDs to close (from list_tabs).'),
+    tab_ids: z.array(z.union([z.number().int(), z.string()])).optional()
+      .describe('Explicit tab IDs to close (numbers or composite like "chrome:123" from list_tabs).'),
     match: z.string().optional()
       .describe('Close every tab whose title or URL contains this substring (case-insensitive).'),
     duplicates: z.boolean().default(false)
       .describe('Close duplicate tabs, keeping the first occurrence of each URL.'),
     dry_run: z.boolean().default(false)
       .describe('Preview the tabs that would close — does not close anything. Recommended for bulk closes.'),
+    browser: z.string().optional()
+      .describe('Optional browser filter ("chrome", "firefox") to limit close actions to a single browser.'),
   },
 
-  execute: async ({ tab_ids, match, duplicates, dry_run }) => {
-    // Enforce exactly one selection mode.
+  execute: async ({ tab_ids, match, duplicates, dry_run, browser }) => {
     const modes = [tab_ids?.length ? 'tab_ids' : null, match ? 'match' : null, duplicates ? 'duplicates' : null]
       .filter(Boolean);
     if (modes.length === 0) {
@@ -58,13 +59,30 @@ export const closeTabsTool = {
       console.error('Failed to fetch tabs:', err);
       throw new Error('Failed to fetch open tabs from extension.');
     }
+    if (browser) {
+      all = all.filter((t) => (t.browser || '').toLowerCase() === browser.toLowerCase());
+    }
+
     const byId = new Map(all.map((t) => [t.id, t]));
+    const byComposite = new Map(all.map((t) => [`${t.browser}:${t.id}`, t]));
 
     let targets, reason;
     if (tab_ids?.length) {
-      targets = tab_ids.filter((id) => byId.has(id)).map((id) => byId.get(id));
+      targets = [];
+      const missing = [];
+      for (const rawId of tab_ids) {
+        if (typeof rawId === 'string' && rawId.includes(':')) {
+          const found = byComposite.get(rawId.toLowerCase());
+          if (found) targets.push(found);
+          else missing.push(rawId);
+        } else {
+          const numId = Number(rawId);
+          const found = byId.get(numId);
+          if (found) targets.push(found);
+          else missing.push(rawId);
+        }
+      }
       reason = `${targets.length} tab(s) by id`;
-      const missing = tab_ids.filter((id) => !byId.has(id));
       if (missing.length) reason += ` (${missing.length} id(s) no longer exist, skipped)`;
     } else if (duplicates) {
       const dupIds = new Set(findDuplicateIds(all));
@@ -87,14 +105,20 @@ export const closeTabsTool = {
         acc[d] = (acc[d] ?? 0) + 1;
         return acc;
       }, {}),
-      sample: targets.slice(0, 10).map((t) => ({ id: t.id, title: t.title || '(untitled)' })),
+      sample: targets.slice(0, 10).map((t) => ({
+        id: t.browser ? `${t.browser}:${t.id}` : t.id,
+        title: t.title || '(untitled)',
+      })),
     };
 
     if (dry_run) {
       return JSON.stringify({ dry_run: true, ...preview }, null, 2);
     }
 
-    const res = await callExtension('close_tabs', { tab_ids: targets.map((t) => t.id) });
+    const res = await callExtension('close_tabs', {
+      tab_ids: targets.map((t) => t.browserInstance ? `${t.browserInstance}:${t.id}` : t.browser ? `${t.browser}:${t.id}` : t.id),
+      browser,
+    });
     return JSON.stringify({ dry_run: false, closed: res.closed, reason, by_domain: preview.by_domain, sample: preview.sample }, null, 2);
   },
 };

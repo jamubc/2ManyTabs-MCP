@@ -14,12 +14,14 @@ export const activateTabTool = {
     openWorldHint: true,
   },
   inputSchema: {
-    tab_id: z.number().int()
-      .describe('The numeric ID of the tab to activate.'),
+    tab_id: z.union([z.number().int(), z.string()])
+      .describe('The numeric ID of the tab (or composite like "chrome:123") to activate.'),
+    browser: z.string().optional()
+      .describe('Optional browser hint ("chrome", "firefox") if tab_id is numeric.'),
   },
 
-  execute: async ({ tab_id }) => {
-    const res = await callExtension('activate_tab', { tab_id });
+  execute: async ({ tab_id, browser }) => {
+    const res = await callExtension('activate_tab', { tab_id, browser });
     return JSON.stringify({
       message: `Successfully activated tab ${tab_id}.`,
       tabId: res.activated,

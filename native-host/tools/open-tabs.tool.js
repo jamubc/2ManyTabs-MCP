@@ -5,7 +5,7 @@ export const openTabsTool = {
   name: 'open_tabs',
   title: 'Open Tabs',
   description:
-    'Open one or more URLs in new Chrome tabs. This tool allows you to navigate the user to ' +
+    'Open one or more URLs in new browser tabs. This tool allows you to navigate the user to ' +
     'specific web pages or search queries.\n\n' +
     'Examples:\n' +
     '- {"urls": ["https://github.com", "https://youtube.com"]}\n' +
@@ -15,21 +15,23 @@ export const openTabsTool = {
     '  - opened (int): Number of tabs successfully opened',
   annotations: {
     readOnlyHint: false,
-    destructiveHint: false, // opening tabs is non-destructive
+    destructiveHint: false,
     idempotentHint: false,
     openWorldHint: true,
   },
   inputSchema: {
     urls: z.array(z.string()).min(1)
       .describe('An array of URLs to open. If no protocol is provided, https:// will be prepended automatically.'),
+    browser: z.string().optional()
+      .describe('Target browser to open tabs in (e.g. "chrome", "firefox"). Defaults to the active browser.'),
   },
 
-  execute: async ({ urls }) => {
+  execute: async ({ urls, browser }) => {
     if (!urls || urls.length === 0) {
       throw new Error('Provide at least one URL to open.');
     }
 
-    const res = await callExtension('open_tabs', { urls });
+    const res = await callExtension('open_tabs', { urls, browser });
     return JSON.stringify({ opened: res.opened }, null, 2);
   },
 };

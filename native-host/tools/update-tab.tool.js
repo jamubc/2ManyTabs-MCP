@@ -14,18 +14,20 @@ export const updateTabTool = {
     openWorldHint: true,
   },
   inputSchema: {
-    tab_id: z.number().int()
-      .describe('The numeric ID of the tab to update.'),
+    tab_id: z.union([z.number().int(), z.string()])
+      .describe('The numeric ID (or composite like "chrome:123") of the tab to update.'),
     url: z.string().optional()
       .describe('A new URL to navigate the tab to. If no protocol is provided, https:// will be prepended.'),
     pinned: z.boolean().optional()
       .describe('Set to true to pin the tab, or false to unpin it.'),
     muted: z.boolean().optional()
       .describe('Set to true to mute the tab, or false to unmute it.'),
+    browser: z.string().optional()
+      .describe('Optional browser hint ("chrome", "firefox") if tab_id is numeric.'),
   },
 
-  execute: async ({ tab_id, url, pinned, muted }) => {
-    const res = await callExtension('update_tab', { tab_id, url, pinned, muted });
+  execute: async ({ tab_id, url, pinned, muted, browser }) => {
+    const res = await callExtension('update_tab', { tab_id, url, pinned, muted, browser });
     return JSON.stringify({
       message: `Successfully updated tab ${tab_id}.`,
       tabId: res.updated,

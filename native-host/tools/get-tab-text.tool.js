@@ -15,12 +15,14 @@ export const getTabTextTool = {
     openWorldHint: true,
   },
   inputSchema: {
-    tab_id: z.number().int()
-      .describe('The numeric ID of the tab whose body text to extract.'),
+    tab_id: z.union([z.number().int(), z.string()])
+      .describe('The numeric ID (or composite like "chrome:123") of the tab whose body text to extract.'),
+    browser: z.string().optional()
+      .describe('Optional browser hint ("chrome", "firefox") if tab_id is numeric.'),
   },
 
-  execute: async ({ tab_id }) => {
-    const res = await callExtension('get_tab_text', { tab_id });
+  execute: async ({ tab_id, browser }) => {
+    const res = await callExtension('get_tab_text', { tab_id, browser });
     if (!res.text) {
       return `Tab ${tab_id} returned no text content (it might be empty, loading, or restricted).`;
     }

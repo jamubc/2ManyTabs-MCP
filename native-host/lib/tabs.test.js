@@ -1,4 +1,3 @@
-// fallow-ignore-file unused-file
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -12,9 +11,6 @@ import {
   getGroupPrefix,
 } from './tabs.js';
 
-// ---------------------------------------------------------------------------
-// domainOf
-// ---------------------------------------------------------------------------
 describe('domainOf', () => {
   it('extracts hostname from https URL', () => {
     assert.equal(domainOf({ url: 'https://www.example.com/path' }), 'www.example.com');
@@ -41,6 +37,16 @@ describe('domainOf', () => {
     assert.equal(result, 'chrome-extension://abcdefg');
   });
 
+  it('handles moz-extension:// URLs', () => {
+    const result = domainOf({ url: 'moz-extension://1234-5678/popup.html' });
+    assert.equal(result, 'moz-extension://1234-5678');
+  });
+
+  it('handles about: URLs', () => {
+    const result = domainOf({ url: 'about:debugging#/runtime/this-firefox' });
+    assert.equal(result, 'about://debugging');
+  });
+
   it('throws on invalid URL', () => {
     assert.throws(() => domainOf({ url: 'not-a-url' }), Error);
   });
@@ -58,9 +64,6 @@ describe('domainOf', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// matchesQuery
-// ---------------------------------------------------------------------------
 describe('matchesQuery', () => {
   it('matches substring in title (case-insensitive)', () => {
     assert.equal(matchesQuery({ title: 'GitHub Issues', url: 'https://github.com' }, 'issues'), true);
@@ -98,9 +101,6 @@ describe('matchesQuery', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// findDuplicateIds
-// ---------------------------------------------------------------------------
 describe('findDuplicateIds', () => {
   it('returns empty array for empty input', () => {
     assert.deepEqual(findDuplicateIds([]), []);
@@ -146,9 +146,6 @@ describe('findDuplicateIds', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// domainHistogram
-// ---------------------------------------------------------------------------
 describe('domainHistogram', () => {
   it('returns empty array for empty input', () => {
     assert.deepEqual(domainHistogram([]), []);
@@ -203,9 +200,6 @@ describe('domainHistogram', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// groupByDomain
-// ---------------------------------------------------------------------------
 describe('groupByDomain', () => {
   it('returns empty object for empty input', () => {
     assert.deepEqual(groupByDomain([]), {});
@@ -266,9 +260,6 @@ describe('groupByDomain', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// groupByWindow
-// ---------------------------------------------------------------------------
 describe('groupByWindow', () => {
   it('returns empty object for empty input', () => {
     assert.deepEqual(groupByWindow([]), {});
@@ -281,7 +272,6 @@ describe('groupByWindow', () => {
       { id: 3, windowId: 2, url: 'https://c.com' },
     ];
     const groups = groupByWindow(tabs);
-    // keys are stringified windowIds
     assert.equal(groups['1'].count, 2);
     assert.deepEqual(groups['1'].tab_ids, [1, 2]);
     assert.equal(groups['2'].count, 1);
@@ -309,9 +299,6 @@ describe('groupByWindow', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// getGroupPrefix
-// ---------------------------------------------------------------------------
 describe('getGroupPrefix', () => {
   const groupMap = new Map([
     [10, { id: 10, title: 'Work' }],
@@ -339,9 +326,6 @@ describe('getGroupPrefix', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// compact
-// ---------------------------------------------------------------------------
 describe('compact', () => {
   it('produces the correct shape for a full tab', () => {
     const tab = {
@@ -404,6 +388,6 @@ describe('compact', () => {
     const tab = { id: 1, windowId: 1, title, url: 'https://a.com' };
     const c = compact(tab);
     assert.equal(c.title, 'x'.repeat(77) + '…');
-    assert.equal([...c.title].length, 78); // 77 chars + 1 ellipsis code point
+    assert.equal([...c.title].length, 78);
   });
 });
