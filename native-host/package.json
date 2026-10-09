@@ -9,8 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jamubc/2ManyTabs-MCP.git",
-    "directory": "native-host"
+    "url": "git+https://github.com/jamubc/2ManyTabs-MCP.git"
   },
   "homepage": "https://github.com/jamubc/2ManyTabs-MCP#readme",
   "files": [
