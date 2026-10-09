@@ -21,7 +21,7 @@ claude mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
 Using another client? Open yours:
 
 <details>
-<summary><strong>Antigravity CLI (agy)</strong></summary>
+<summary><img alt="Antigravity CLI" src="https://img.shields.io/badge/Antigravity%20CLI-4285F4?logo=google&logoColor=white" height="22"></summary>
 
 ```shell
 agy mcp add 2manytabs-mcp npx -y 2manytabs-mcp-host
@@ -29,7 +29,7 @@ agy mcp add 2manytabs-mcp npx -y 2manytabs-mcp-host
 </details>
 
 <details>
-<summary><strong>Codex</strong></summary>
+<summary><img alt="Codex" src="https://img.shields.io/badge/Codex-10A37F" height="22"></summary>
 
 ```shell
 codex mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
@@ -37,7 +37,7 @@ codex mcp add 2manytabs-mcp -- npx -y 2manytabs-mcp-host
 </details>
 
 <details>
-<summary><strong>VS Code / GitHub Copilot</strong></summary>
+<summary><img alt="VS Code" src="https://img.shields.io/badge/VS%20Code-007ACC" height="22"> <img alt="GitHub Copilot" src="https://img.shields.io/badge/GitHub%20Copilot-000000?logo=githubcopilot&logoColor=white" height="22"></summary>
 
 ```shell
 code --add-mcp '{"name":"2manytabs-mcp","command":"npx","args":["-y","2manytabs-mcp-host"]}'
@@ -47,7 +47,7 @@ This adds it to your user profile.
 </details>
 
 <details>
-<summary><strong>Hermes Agent</strong></summary>
+<summary><img alt="Hermes Agent" src="https://img.shields.io/badge/Hermes%20Agent-6B4FBB" height="22"></summary>
 
 ```shell
 hermes mcp add 2manytabs-mcp --command npx --args -y 2manytabs-mcp-host
@@ -55,13 +55,13 @@ hermes mcp add 2manytabs-mcp --command npx --args -y 2manytabs-mcp-host
 </details>
 
 <details>
-<summary><strong>OpenClaw</strong></summary>
+<summary><img alt="OpenClaw" src="https://img.shields.io/badge/OpenClaw-E5484D" height="22"></summary>
 
 Open **Settings → MCP**, choose **Add server**, pick **Stdio**, and enter the command `npx` with the arguments `-y 2manytabs-mcp-host`.
 </details>
 
 <details>
-<summary><strong>Claude Desktop, Cursor, Windsurf, Cline, Continue, Gemini CLI</strong></summary>
+<summary><img alt="Claude Desktop" src="https://img.shields.io/badge/Claude%20Desktop-D97757?logo=claude&logoColor=white" height="22"> <img alt="Cursor" src="https://img.shields.io/badge/Cursor-000000?logo=cursor&logoColor=white" height="22"> <img alt="Windsurf" src="https://img.shields.io/badge/Windsurf-0B100F?logo=windsurf&logoColor=white" height="22"> <img alt="Cline" src="https://img.shields.io/badge/Cline-5A3FC0?logo=cline&logoColor=white" height="22"> <img alt="Continue" src="https://img.shields.io/badge/Continue-1F2937" height="22"> <img alt="Gemini CLI" src="https://img.shields.io/badge/Gemini%20CLI-8E75B2?logo=googlegemini&logoColor=white" height="22"></summary>
 
 Add this to the client's MCP config file, then restart the client:
 
