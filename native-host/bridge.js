@@ -236,7 +236,7 @@ function handlePeerConnection(socket) {
     try { msg = JSON.parse(raw); } catch { return; }
     if (msg.type !== 'call') return;
     try {
-      const result = await routeCall(msg.action, msg.params);
+      const result = await routeCall(msg.action, msg.params, [...peerClients].indexOf(socket) + 1);
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: 'reply', peerReqId: msg.peerReqId, result }));
       }
@@ -254,7 +254,7 @@ function handlePeerConnection(socket) {
   socket.on('error', () => { /* close handles cleanup */ });
 }
 
-function sendToClient(client, action, params = {}) {
+function deliver(client, action, params = {}, agent = 0) {
   return new Promise((resolve, reject) => {
     if (!client?.socket || client.socket.readyState !== WebSocket.OPEN) {
       return reject(new Error(EXT_NOT_CONNECTED_MSG));
@@ -266,7 +266,13 @@ function sendToClient(client, action, params = {}) {
     }, CALL_TIMEOUT_MS);
     inflight.set(id, { socket: client.socket, resolve, reject, timer });
     client.socket.send(JSON.stringify({ id, action, ...params }));
+    broadcastActivity(client.id, action, agent);
   });
+}
+
+function broadcastActivity(target, action, agent) {
+  const msg = JSON.stringify({ type: 'activity', target, action, agent, at: Date.now() });
+  for (const c of getActiveClients()) c.socket.send(msg);
 }
 
 function broadcastStatus() {
@@ -349,8 +355,8 @@ function batchByClient(rawIds, browserHint) {
   return batches;
 }
 
-async function fanOut(action, params, clients, onItem, onClient) {
-  const results = await Promise.allSettled(clients.map((c) => sendToClient(c, action, params)));
+async function fanOut(action, params, clients, onItem, onClient, agent = 0) {
+  const results = await Promise.allSettled(clients.map((c) => deliver(c, action, params, agent)));
   // Support single mock client echo in integration tests
   if (clients.length === 1 && results[0].status === 'fulfilled' && !Array.isArray(results[0].value)) {
     return results[0].value;
@@ -375,7 +381,8 @@ function withoutBrowser(params, extra) {
   return out;
 }
 
-async function routeCall(action, params = {}) {
+async function routeCall(action, params = {}, agent = 0) {
+  const sendToClient = (c, a, p) => deliver(c, a, p, agent);
   const clients = getActiveClients();
   if (clients.length === 0) {
     throw new Error(EXT_NOT_CONNECTED_MSG);
@@ -387,7 +394,7 @@ async function routeCall(action, params = {}) {
       tab.browserInstance = client.id;
       tab.browserName = client.name;
       noteOwner(tabClientIndex, tab.id, client.id);
-    }, (client) => forgetClient(tabClientIndex, client.id));
+    }, (client) => forgetClient(tabClientIndex, client.id), agent);
   }
 
   if (action === 'query_groups') {
@@ -395,7 +402,7 @@ async function routeCall(action, params = {}) {
       grp.browser = client.browser;
       grp.browserInstance = client.id;
       noteOwner(groupClientIndex, grp.id, client.id);
-    }, (client) => forgetClient(groupClientIndex, client.id));
+    }, (client) => forgetClient(groupClientIndex, client.id), agent);
   }
 
   // Tab groups can't span browsers: every tab (and the target group) must

@@ -23,12 +23,12 @@ const chromeExt = new WebSocket(`ws://127.0.0.1:${PORT}/?browser=chrome&name=Chr
 });
 
 const chromeStatus = [];
+const chromeActivity = [];
 chromeExt.on('message', (raw) => {
   const msg = JSON.parse(raw);
-  if (msg.type === 'status') {
-    chromeStatus.push(msg);
-    return;
-  }
+  if (msg.type === 'status') chromeStatus.push(msg);
+  if (msg.type === 'activity') chromeActivity.push(msg);
+  if (msg.type) return;
   if (msg.action === 'query_tabs') {
     chromeExt.send(JSON.stringify({
       id: msg.id,
@@ -59,7 +59,7 @@ const firefoxExt = new WebSocket(`ws://127.0.0.1:${PORT}/?browser=firefox&name=F
 
 firefoxExt.on('message', (raw) => {
   const msg = JSON.parse(raw);
-  if (msg.type === 'status') return;
+  if (msg.type) return;
   if (msg.action === 'query_tabs') {
     firefoxExt.send(JSON.stringify({
       id: msg.id,
@@ -104,6 +104,9 @@ assert(resChrome?.success === true, 'Targeted call auto-routed to Chrome tab 11 
 let chromeErr = null;
 try { await callExtension('execute_script', { tab_id: 'chrome:11', script: '1' }); } catch (e) { chromeErr = e; }
 assert(/not available in Chrome/.test(chromeErr?.message), 'execute_script on a Chrome tab is refused with a clear message');
+
+const act = chromeActivity.find((a) => a.action === 'activate_tab');
+assert(act?.target === 'chrome_inst' && act?.agent === 0, 'Every routed call is announced with its target browser and agent');
 
 const lastStatus = chromeStatus.at(-1);
 assert(lastStatus?.self === 'chrome_inst' && lastStatus?.agents === 1, 'Status tells Chrome who it is and how many agents are connected');

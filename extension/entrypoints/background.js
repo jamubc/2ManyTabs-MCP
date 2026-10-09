@@ -65,6 +65,10 @@ export default defineBackground(() => {
         browser.storage.local.set({ peers: { self: msg.self, agents: msg.agents, browsers: msg.browsers } });
         return;
       }
+      if (msg.type === 'activity') {
+        browser.storage.local.set({ activity: { target: msg.target, action: msg.action, agent: msg.agent, at: msg.at } });
+        return;
+      }
 
       let result, error;
       try {

@@ -5,238 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Internet MCP</title>
   <style>
+    :root {
+      --ink: #060a14;
+      --ink-raised: #0c1322;
+      --bay: #070b15;
+      --line: rgba(148, 163, 184, 0.09);
+      --text: #e6edf7;
+      --muted: #8a96ab;
+      --faint: #56627a;
+      --cyan: #22e4f5;
+      --violet: #b48cff;
+      --red: #ff5c6c;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       width: 260px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       font-size: 13px;
-      background: #07080c;
-      color: #cbd5e1;
-      padding: 24px 20px 20px 20px;
+      background: radial-gradient(120% 90% at 50% 0%, var(--ink-raised) 0%, var(--ink) 70%);
+      color: var(--muted);
+      padding: 16px 16px 14px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
-      overflow: hidden;
       position: relative;
-    }
-
-    .eye-container {
-      margin-bottom: 24px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .link-map {
-      width: 100%;
-      margin-top: 16px;
-    }
-
-    .link-map svg {
-      display: block;
-      width: 100%;
-      overflow: visible;
-    }
-
-    .link {
-      fill: none;
-      stroke: #1e293b;
-      stroke-width: 1.5;
-      transition: stroke 0.2s ease;
-    }
-
-    .live .link.agent {
-      stroke: rgba(192, 132, 252, 0.45);
-    }
-
-    .live .link.browser {
-      stroke: rgba(0, 255, 255, 0.35);
-    }
-
-    .live .link.browser.here,
-    .live .node.browser:hover + .link,
-    .live .link.browser.hot {
-      stroke: #00ffff;
-    }
-
-    .link-map:not(.live) .link {
-      stroke-dasharray: 3 4;
-    }
-
-    .pulse.agent {
-      fill: #e9d5ff;
-    }
-
-    .pulse.browser {
-      fill: #a5f3fc;
-    }
-
-    .node-dot.agent {
-      fill: #c084fc;
-    }
-
-    .node-dot.browser {
-      fill: #334155;
-    }
-
-    .live .node-dot.browser {
-      fill: #64748b;
-    }
-
-    .live .node-dot.browser.here {
-      fill: #00ffff;
-    }
-
-    .halo {
-      fill: none;
-      stroke: #00ffff;
-      stroke-width: 1;
-      opacity: 0.5;
-    }
-
-    .node-label {
-      font-size: 11px;
-      fill: #64748b;
-    }
-
-    .node-label.here {
-      fill: #00ffff;
-      font-weight: 600;
-    }
-
-    .node.browser {
-      cursor: default;
-    }
-
-    .node.browser:hover .node-label {
-      fill: #e2e8f0;
-    }
-
-    .eye-frame {
-      fill: #07080c;
-      stroke: #475569;
-      stroke-width: 2;
-    }
-
-    .live .eye-frame {
-      stroke: #64748b;
-    }
-
-    .eye-pupil {
-      fill: none;
-      stroke: #00f2fe;
-      stroke-width: 2;
-    }
-
-    .vision-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 28px;
-      user-select: none;
-    }
-
-    .vision-eyebrow {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: #888;
-      font-weight: 600;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-
-    .vision-main {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-    }
-
-    .tab-count-value {
-      font-size: 38px;
-      font-weight: 800;
-      background: linear-gradient(135deg, #00f2fe 0%, #c084fc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      line-height: 1;
-    }
-
-    .vision-tabs-text {
-      font-size: 18px;
-      font-weight: 700;
-      color: #e2e8f0;
-    }
-
-    .pill {
-      font-size: 11px;
-      color: #94a3b8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin: 0;
-      font-weight: 500;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    .status-value {
-      font-weight: 600;
-    }
-
-    /* Connected state styling */
-    .pill.connected .status-value {
-      color: #00ffff;
-    }
-
-    .pill.connected .status-dot {
-      background: #00ffff;
-    }
-
-    /* Disconnected state styling */
-    .pill.disconnected .status-value {
-      color: #ff5353;
-    }
-
-    .pill.disconnected .status-dot {
-      background: #ff5353;
-    }
-
-    .footer {
-      width: 100%;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding-top: 16px;
-      margin-top: 4px;
-    }
-
-    .links-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-    }
-
-    .support-link {
-      color: #888;
-      text-decoration: none;
-      transition: color 0.2s ease;
-      font-weight: 500;
-    }
-
-    .support-link:hover {
-      color: #cbd5e1;
+      overflow: hidden;
     }
 
     .toggle-container {
       position: absolute;
-      top: 16px;
+      top: 14px;
       right: 16px;
       width: 28px;
       height: 16px;
@@ -252,9 +51,9 @@
     .toggle-slider {
       position: absolute;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #334155;
-      transition: .3s;
+      inset: 0;
+      background-color: #1c2638;
+      transition: background-color 0.2s ease;
       border-radius: 16px;
     }
 
@@ -265,29 +64,222 @@
       width: 12px;
       left: 2px;
       bottom: 2px;
-      background-color: #cbd5e1;
-      transition: .3s;
+      background-color: var(--muted);
+      transition: transform 0.2s ease;
       border-radius: 50%;
     }
 
-    .toggle-input:checked + .toggle-slider {
-      background-color: #00ffff;
-    }
+    .toggle-input:checked + .toggle-slider { background-color: var(--cyan); }
 
     .toggle-input:checked + .toggle-slider:before {
       transform: translateX(12px);
-      background-color: #07080c;
+      background-color: var(--ink);
     }
+
+    .toggle-input:focus-visible + .toggle-slider {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+    }
+
+    .bay {
+      margin-top: 26px;
+      padding: 10px 6px 8px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, var(--bay) 0%, #0a1020 100%);
+      border: 1px solid var(--line);
+      box-shadow: inset 0 10px 24px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .link-map svg {
+      display: block;
+      width: 100%;
+      overflow: visible;
+    }
+
+    .link {
+      fill: none;
+      stroke-width: 1.5;
+      transition: stroke 0.6s ease, stroke-width 0.6s ease;
+    }
+
+    .link.agent { stroke: rgba(180, 140, 255, 0.28); }
+    .link.browser { stroke: rgba(34, 228, 245, 0.2); }
+    .link.browser.here { stroke: rgba(34, 228, 245, 0.55); }
+
+    .link.agent.firing {
+      stroke: var(--violet);
+      stroke-width: 2;
+      transition: none;
+    }
+
+    .link.browser.firing,
+    .link.browser.hot {
+      stroke: var(--cyan);
+      stroke-width: 2;
+      transition: none;
+    }
+
+    .link-map:not(.live) .link {
+      stroke: #1c2638;
+      stroke-dasharray: 3 4;
+    }
+
+    .node-dot.agent { fill: var(--violet); }
+    .node-dot.browser { fill: var(--faint); }
+    .node-dot.browser.here { fill: var(--cyan); }
+    .link-map:not(.live) .node-dot { fill: #1c2638; }
+
+    .halo {
+      fill: none;
+      stroke: var(--cyan);
+      stroke-width: 1;
+      opacity: 0.45;
+    }
+
+    .node-label {
+      font-size: 11px;
+      fill: var(--faint);
+    }
+
+    .node-label.here {
+      fill: var(--text);
+      font-weight: 600;
+    }
+
+    .node.browser:hover .node-label { fill: var(--text); }
+
+    .eye-frame {
+      fill: var(--ink);
+      stroke: #2a3650;
+      stroke-width: 2;
+      transition: stroke 0.6s ease;
+    }
+
+    .live .eye-frame { stroke: #3b4a68; }
+
+    .eye-pupil {
+      fill: none;
+      stroke: var(--cyan);
+      stroke-width: 2;
+      transition: filter 0.6s ease;
+    }
+
+    .eye.firing .eye-frame {
+      stroke: var(--cyan);
+      transition: none;
+    }
+
+    .eye.firing .eye-pupil {
+      filter: drop-shadow(0 0 4px var(--cyan));
+      transition: none;
+    }
+
+    .pulse.agent { fill: #f1e7ff; }
+    .pulse.browser { fill: #d5fbff; }
+
+    .last-call {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--faint);
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .last-call strong {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .vision-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px 0 18px;
+      user-select: none;
+    }
+
+    .vision-eyebrow {
+      font-size: 11px;
+      color: var(--faint);
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .vision-main {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .tab-count-value {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+    }
+
+    .vision-tabs-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .footer {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+
+    .links-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    .support-link {
+      color: var(--faint);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .support-link:hover,
+    .support-link:focus-visible { color: var(--text); }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .pill.connected { color: var(--cyan); }
+    .pill.connected .status-dot { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+    .pill.disconnected { color: var(--red); }
+    .pill.disconnected .status-dot { background: var(--red); }
   </style>
 </head>
 
 <body>
-  <label class="toggle-container" aria-label="Toggle MCP">
+  <label class="toggle-container" aria-label="Turn the MCP connection on or off">
     <input type="checkbox" id="powerToggle" class="toggle-input" checked>
     <span class="toggle-slider"></span>
   </label>
 
-  <div class="eye-container link-map" id="linkMap" role="img" aria-label="Connection map"></div>
+  <div class="bay">
+    <div class="link-map" id="linkMap" role="img" aria-label="Connection map"></div>
+    <div class="last-call" id="lastCall" aria-live="polite"></div>
+  </div>
 
   <div class="vision-container">
     <div class="vision-eyebrow">MCP can see</div>
