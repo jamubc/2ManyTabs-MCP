@@ -2,9 +2,37 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { startBridge } from './bridge.js';
+import { z } from 'zod';
 import { toolRegistry } from './tools/index.js';
+import { SERVER_INSTRUCTIONS, cleanupGuide } from './lib/guide.js';
 
-const server = new McpServer({ name: '2manytabs-mcp', version: '3.0.0' });
+const server = new McpServer(
+  { name: '2manytabs-mcp', version: '3.0.0' },
+  { instructions: SERVER_INSTRUCTIONS },
+);
+
+// The same method as start_tab_cleanup, for clients that list MCP prompts as commands.
+server.registerPrompt(
+  'close-the-loops',
+  {
+    title: 'Clean up my tabs',
+    description: 'Sort your open tabs, close what you no longer need, and keep the few real to-dos.',
+    argsSchema: {
+      focus: z.string().optional()
+        .describe('Optional: only part of the job, e.g. "my YouTube tabs" or "duplicates".'),
+    },
+  },
+  ({ focus }) => ({
+    messages: [{
+      role: 'user',
+      content: {
+        type: 'text',
+        text: `I have too many browser tabs open. Help me with ${focus ? `this: ${focus}` : 'them'}.\n\n` +
+          'Follow this method, and start with step 1:\n\n' + cleanupGuide(),
+      },
+    }],
+  }),
+);
 
 for (const tool of toolRegistry) {
   server.registerTool(

@@ -27,7 +27,7 @@ function renderHistogram(histogram) {
   return lines;
 }
 
-function renderByDomain(tabs, groupMap) {
+function renderByDomain(tabs, groupMap, urlLine) {
   const grouped = {};
   for (const t of tabs) {
     const domain = t.url ? new URL(t.url).hostname : '(local)';
@@ -41,7 +41,7 @@ function renderByDomain(tabs, groupMap) {
       const label = tabLabel(t);
       const flags = buildFlags(t);
       const flagStr = formatFlags(flags);
-      lines.push(`    · ${formatIdPrefix(t)}${formatGroupPrefix(groupMap, t)}${label}${flagStr}`);
+      lines.push(`    · ${formatIdPrefix(t)}${formatGroupPrefix(groupMap, t)}${label}${flagStr}${urlLine(t)}`);
     }
     lines.push('');
   }
@@ -49,7 +49,7 @@ function renderByDomain(tabs, groupMap) {
   return lines;
 }
 
-function renderByWindow(tabs, groupMap) {
+function renderByWindow(tabs, groupMap, urlLine) {
   const grouped = {};
   for (const t of tabs) {
     const key = t.browser ? `${t.browser}:${t.windowId}` : `${t.windowId}`;
@@ -65,7 +65,7 @@ function renderByWindow(tabs, groupMap) {
       const label = tabLabel(t);
       const flags = buildFlags(t);
       const flagStr = formatFlags(flags);
-      lines.push(`    · ${formatIdPrefix(t)}${formatGroupPrefix(groupMap, t)}${label}${flagStr}`);
+      lines.push(`    · ${formatIdPrefix(t)}${formatGroupPrefix(groupMap, t)}${label}${flagStr}${urlLine(t)}`);
     }
     lines.push('');
   }
@@ -73,7 +73,7 @@ function renderByWindow(tabs, groupMap) {
   return lines;
 }
 
-function renderFlat(tabs, groupMap) {
+function renderFlat(tabs, groupMap, urlLine) {
   const lines = [];
   for (const t of tabs) {
     const c = compact(t);
@@ -83,7 +83,7 @@ function renderFlat(tabs, groupMap) {
         : c.title;
     const flags = buildFlags(c);
     const flagStr = formatFlags(flags);
-    lines.push(`  · ${formatIdPrefix(t)}${formatGroupPrefix(groupMap, t)}${label}${flagStr}`);
+    lines.push(`  · ${formatIdPrefix(t)}${formatGroupPrefix(groupMap, t)}${label}${flagStr}${urlLine(t)}`);
   }
 
   return lines;
@@ -99,9 +99,12 @@ export function formatTabData(data) {
     duplicates_only,
     windows,
     dupCount,
+    matched = tabs.length,
+    show_urls = false,
   } = data;
 
   const lines = [];
+  const urlLine = (t) => (show_urls ? `\n        ${t.url ?? ''}` : '');
 
   const browsers = [...new Set(tabs.map((t) => t.browser).filter(Boolean))];
   const browserSummary = browsers.length > 1
@@ -115,16 +118,22 @@ export function formatTabData(data) {
       (dupCount > 0 ? ` · ${dupCount} duplicate(s) found` : '') +
       '\n',
   );
+  if (matched > tabs.length) {
+    lines.push(
+      `⚠️ Showing the first ${tabs.length} of ${matched} tabs. Counts, histogram and duplicates above ` +
+      'cover only those shown. Narrow with `query` or `browser`, or use cluster_tabs for the whole set.\n',
+    );
+  }
 
   lines.push(...renderHistogram(histogram));
   lines.push('');
 
   if (group_by === 'domain') {
-    lines.push(...renderByDomain(tabs, groupMap));
+    lines.push(...renderByDomain(tabs, groupMap, urlLine));
   } else if (group_by === 'window') {
-    lines.push(...renderByWindow(tabs, groupMap));
+    lines.push(...renderByWindow(tabs, groupMap, urlLine));
   } else {
-    lines.push(...renderFlat(tabs, groupMap));
+    lines.push(...renderFlat(tabs, groupMap, urlLine));
   }
 
   return lines.join('\n');

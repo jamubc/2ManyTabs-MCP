@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { callExtension } from '../bridge.js';
-import { matchesQuery, findDuplicateIds, domainOf } from '../lib/tabs.js';
+import { domainOf, selectCloseTargets, checkExpectedCount, CONFIRM_COUNT_OVER } from '../lib/tabs.js';
 
 export const closeTabsTool = {
   name: 'close_tabs',
@@ -8,21 +8,26 @@ export const closeTabsTool = {
   description:
     'Close browser tabs by one selection mode: `tab_ids` (explicit), `match` (substring of ' +
     'title/URL), or `duplicates` (every tab sharing a URL with an earlier one). Set `dry_run` ' +
-    'to preview the exact tabs that would close without touching them. Destructive — closed ' +
-    'tabs cannot be recovered through this tool.\n\n' +
-    'CRITICAL: You MUST explicitly ask the user for confirmation before running this tool with ' +
-    'dry_run=false, unless they already asked you to.\n\n' +
+    'to preview the exact tabs that would close without touching them. `match` and `duplicates` ' +
+    'leave pinned tabs open unless `include_pinned` is true. Closing more than ' +
+    `${CONFIRM_COUNT_OVER} tabs needs \`expected_count\`, the count from the preview that the ` +
+    'user agreed to; if the selection no longer has exactly that many tabs, nothing closes. ' +
+    'This tool cannot reopen what it closes (reopen_tabs can, from a record saved by snapshot_tabs).\n\n' +
+    'Ask the user before running with dry_run=false, naming what will close and how many, ' +
+    'unless they already asked for exactly this close.\n\n' +
     'Examples:\n' +
-    '- {"tab_ids": [123, 456], "dry_run": true}\n' +
-    '- {"match": "github.com", "dry_run": false}\n' +
+    '- {"match": "github.com", "dry_run": true}\n' +
+    '- {"match": "github.com", "expected_count": 14}\n' +
+    '- {"tab_ids": ["firefox:12", "firefox:13"]}\n' +
     '- {"duplicates": true, "dry_run": true}\n\n' +
     'Returns:\n' +
     '  JSON object containing:\n' +
     '  - dry_run (boolean): Whether this was a preview\n' +
     '  - reason (string): Description of selection criteria\n' +
     '  - count/closed (int): Number of tabs matched/closed\n' +
+    '  - pinned_kept (int): Pinned tabs that matched but were left open\n' +
     '  - by_domain (object): Map of domain to count\n' +
-    '  - sample (array): First 10 tabs with {id, title}',
+    '  - sample (array): First 10 tabs with {id, title, url}',
   annotations: {
     readOnlyHint: false,
     destructiveHint: true,
@@ -38,20 +43,15 @@ export const closeTabsTool = {
       .describe('Close duplicate tabs, keeping the first occurrence of each URL.'),
     dry_run: z.boolean().default(false)
       .describe('Preview the tabs that would close — does not close anything. Recommended for bulk closes.'),
+    expected_count: z.number().int().min(1).optional()
+      .describe(`The number of tabs the user agreed to close, from the preview. Required above ${CONFIRM_COUNT_OVER} tabs.`),
+    include_pinned: z.boolean().default(false)
+      .describe('Also close pinned tabs that `match` or `duplicates` selects. Explicit `tab_ids` always include them.'),
     browser: z.string().optional()
       .describe('Optional browser filter ("chrome", "firefox") to limit close actions to a single browser.'),
   },
 
-  execute: async ({ tab_ids, match, duplicates, dry_run, browser }) => {
-    const modes = [tab_ids?.length ? 'tab_ids' : null, match ? 'match' : null, duplicates ? 'duplicates' : null]
-      .filter(Boolean);
-    if (modes.length === 0) {
-      throw new Error('Provide one selection mode: tab_ids, match, or duplicates:true.');
-    }
-    if (modes.length > 1) {
-      throw new Error(`Use only one selection mode at a time (got: ${modes.join(', ')}).`);
-    }
-
+  execute: async ({ tab_ids, match, duplicates, dry_run, expected_count, include_pinned, browser }) => {
     let all;
     try {
       all = await callExtension('query_tabs');
@@ -63,51 +63,26 @@ export const closeTabsTool = {
       all = all.filter((t) => (t.browser || '').toLowerCase() === browser.toLowerCase());
     }
 
-    const byId = new Map(all.map((t) => [t.id, t]));
-    const byComposite = new Map(all.map((t) => [`${t.browser}:${t.id}`, t]));
-
-    let targets, reason;
-    if (tab_ids?.length) {
-      targets = [];
-      const missing = [];
-      for (const rawId of tab_ids) {
-        if (typeof rawId === 'string' && rawId.includes(':')) {
-          const found = byComposite.get(rawId.toLowerCase());
-          if (found) targets.push(found);
-          else missing.push(rawId);
-        } else {
-          const numId = Number(rawId);
-          const found = byId.get(numId);
-          if (found) targets.push(found);
-          else missing.push(rawId);
-        }
-      }
-      reason = `${targets.length} tab(s) by id`;
-      if (missing.length) reason += ` (${missing.length} id(s) no longer exist, skipped)`;
-    } else if (duplicates) {
-      const dupIds = new Set(findDuplicateIds(all));
-      targets = all.filter((t) => dupIds.has(t.id));
-      reason = 'duplicate tabs';
-    } else {
-      targets = all.filter((t) => matchesQuery(t, match));
-      reason = `tabs matching "${match}"`;
-    }
+    const { targets, reason, pinnedKept } = selectCloseTargets(all, { tab_ids, match, duplicates, include_pinned });
 
     if (targets.length === 0) {
-      return `No tabs matched (${reason}). Nothing to close.`;
+      const pinned = pinnedKept ? ` ${pinnedKept} pinned tab(s) matched and were left open; set include_pinned to close them.` : '';
+      return `No tabs matched (${reason}). Nothing to close.${pinned}`;
     }
 
     const preview = {
       reason,
       count: targets.length,
+      ...(pinnedKept ? { pinned_kept: pinnedKept } : {}),
       by_domain: targets.reduce((acc, t) => {
-        const d = domainOf(t);
+        const d = t.url ? domainOf(t) : '(no url)';
         acc[d] = (acc[d] ?? 0) + 1;
         return acc;
       }, {}),
       sample: targets.slice(0, 10).map((t) => ({
         id: t.browser ? `${t.browser}:${t.id}` : t.id,
         title: t.title || '(untitled)',
+        url: t.url ?? '',
       })),
     };
 
@@ -115,10 +90,12 @@ export const closeTabsTool = {
       return JSON.stringify({ dry_run: true, ...preview }, null, 2);
     }
 
+    checkExpectedCount(targets.length, expected_count, 'close');
+
     const res = await callExtension('close_tabs', {
       tab_ids: targets.map((t) => t.browserInstance ? `${t.browserInstance}:${t.id}` : t.browser ? `${t.browser}:${t.id}` : t.id),
       browser,
     });
-    return JSON.stringify({ dry_run: false, closed: res.closed, reason, by_domain: preview.by_domain, sample: preview.sample }, null, 2);
+    return JSON.stringify({ dry_run: false, closed: res.closed, ...preview, count: undefined }, null, 2);
   },
 };

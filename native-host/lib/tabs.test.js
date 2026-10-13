@@ -9,7 +9,64 @@ import {
   groupByWindow,
   compact,
   getGroupPrefix,
+  selectCloseTargets,
+  checkExpectedCount,
+  CONFIRM_COUNT_OVER,
+  groupTitleNote,
 } from './tabs.js';
+
+describe('groupTitleNote', () => {
+  it('says nothing for a name that fits', () => {
+    assert.equal(groupTitleNote('Watch later'), undefined);
+    assert.equal(groupTitleNote(undefined), undefined);
+  });
+
+  it('shows how a long name will be cut off', () => {
+    const note = groupTitleNote('5 Homelab, AI tools, odds (37)');
+    assert.match(note, /30 characters/);
+    assert.match(note, /"5 Homelab, AI t…"/);
+  });
+});
+
+describe('selectCloseTargets', () => {
+  const all = [
+    { id: 1, browser: 'firefox', url: 'https://a.test/', title: 'A', pinned: true },
+    { id: 2, browser: 'firefox', url: 'https://a.test/', title: 'A copy' },
+    { id: 3, browser: 'firefox', url: 'https://b.test/', title: 'about a.test' },
+  ];
+
+  it('requires exactly one selection mode', () => {
+    assert.throws(() => selectCloseTargets(all, {}), /Provide one selection mode/);
+    assert.throws(() => selectCloseTargets(all, { match: 'a', duplicates: true }), /only one selection mode/);
+  });
+
+  it('leaves pinned tabs out of match and duplicates unless asked', () => {
+    const m = selectCloseTargets(all, { match: 'a.test' });
+    assert.deepEqual(m.targets.map((t) => t.id), [2, 3]);
+    assert.equal(m.pinnedKept, 1);
+    assert.equal(selectCloseTargets(all, { match: 'a.test', include_pinned: true }).targets.length, 3);
+  });
+
+  it('closes pinned tabs named explicitly and reports missing ids', () => {
+    const r = selectCloseTargets(all, { tab_ids: ['firefox:1', 99] });
+    assert.deepEqual(r.targets.map((t) => t.id), [1]);
+    assert.match(r.reason, /1 id\(s\) no longer exist/);
+  });
+});
+
+describe('checkExpectedCount', () => {
+  it('allows small actions without a count', () => {
+    assert.doesNotThrow(() => checkExpectedCount(CONFIRM_COUNT_OVER, undefined, 'close'));
+  });
+  it('refuses large actions without a count, naming the count to confirm', () => {
+    assert.throws(() => checkExpectedCount(CONFIRM_COUNT_OVER + 1, undefined, 'close'),
+      new RegExp(`expected_count: ${CONFIRM_COUNT_OVER + 1}`));
+  });
+  it('refuses when the selection changed since the preview', () => {
+    assert.throws(() => checkExpectedCount(12, 11, 'close'), /now has 12 tabs, so nothing was done/);
+    assert.doesNotThrow(() => checkExpectedCount(12, 12, 'close'));
+  });
+});
 
 describe('domainOf', () => {
   it('extracts hostname from https URL', () => {

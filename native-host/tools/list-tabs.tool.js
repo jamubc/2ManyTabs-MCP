@@ -10,10 +10,13 @@ export const listTabsTool = {
   name: 'list_tabs',
   title: 'List Tabs',
   description:
-    'Read open browser tabs. Returns a domain histogram (the fastest way to understand a large ' +
-    'tab set) plus a detailed view. When summarizing the results for the user, you should ' +
-    'include the histogram bar graph in your response. Filter with `query`, reshape with ' +
-    '`group_by`, or isolate redundant tabs with `duplicates_only`. Read-only — never closes anything.',
+    'Read open browser tabs: a domain histogram plus one line per tab. Best for finding ' +
+    'specific tabs with `query`. To survey, sort or clean up many tabs, use cluster_tabs ' +
+    'instead: it summarises any number of tabs in a few lines, where this prints every tab. ' +
+    'Filter with `query`, reshape with ' +
+    '`group_by`, or isolate redundant tabs with `duplicates_only`. Shows at most ' +
+    `${MAX_TAB_LIST} tabs and says so when there are more; cluster_tabs summarises any number. ` +
+    'Read-only — never closes anything.',
   annotations: { readOnlyHint: true, openWorldHint: true },
   inputSchema: {
     query: z.string().optional()
@@ -25,9 +28,11 @@ export const listTabsTool = {
       .describe('Only include tabs that are duplicates (share a URL with an earlier tab).'),
     browser: z.string().optional()
       .describe('Filter tabs to a specific browser (e.g. "chrome", "firefox"). Omit to list tabs across all open browsers.'),
+    show_urls: z.boolean().default(false)
+      .describe('Print each tab\'s URL under its title. Long output for many tabs: narrow with `query` first.'),
   },
 
-  execute: async ({ query, group_by, duplicates_only, browser }) => {
+  execute: async ({ query, group_by, duplicates_only, browser, show_urls }) => {
     let all = await callExtension('query_tabs');
     if (browser) {
       all = all.filter((t) => (t.browser || '').toLowerCase() === browser.toLowerCase());
@@ -49,6 +54,7 @@ export const listTabsTool = {
       tabs = tabs.filter((t) => dupIds.has(t.id));
     }
 
+    const matched = tabs.length;
     if (tabs.length > MAX_TAB_LIST) {
       tabs = tabs.slice(0, MAX_TAB_LIST);
     }
@@ -66,6 +72,8 @@ export const listTabsTool = {
       duplicates_only,
       windows,
       dupCount,
+      matched,
+      show_urls,
     });
   },
 };
