@@ -28,9 +28,13 @@ Important notes:
 
 ## Tools
 
-- [list_tabs](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/list-tabs.tool.js): Read open tabs across Chrome and Firefox. Returns a domain histogram with proportional bars plus a per-domain tab listing showing titles, pinned (📌), audible (🔊), and browser flags. Accepts `query`, `group_by`, `duplicates_only`, and `browser` filter. Read-only.
+- [start_tab_cleanup](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/start-tab-cleanup.tool.js): Returns the step-by-step clean-up method (built from the `closing-tab-loops` Agent Skill) for an agent to follow when a user has too many tabs. Read-only. The same text is served as the `close-the-loops` MCP prompt, and the server's `instructions` point agents at this tool.
+- [cluster_tabs](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/cluster-tabs.tool.js): Summarise any number of tabs as clusters per site (split by path for busy sites) with counts, last-used ages, flags (duplicate, error, search, editing, pinned), sample titles, and the `match` string for `close_tabs` with how many tabs it selects. Hides titles on private sites. Accepts `cluster`, `signal`, `top`, `offset`, `browser`. Read-only.
+- [snapshot_tabs](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/snapshot-tabs.tool.js): Write a record of all open tabs (title, URL, window, group, pinned, lastAccessed) to the per-user app-data folder (no caller-chosen path), owner-only, never overwritten. Returns the record name and path.
+- [reopen_tabs](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/reopen-tabs.tool.js): Reopen tabs from a record that are no longer open, in their original browser. Accepts `record`, `match`, `dry_run`, `expected_count` (required above 10); at most 100 per call; http(s) and file links only.
+- [list_tabs](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/list-tabs.tool.js): Read open tabs across Chrome and Firefox. Returns a domain histogram with proportional bars plus a per-domain tab listing showing titles, pinned (📌), audible (🔊), and browser flags. Accepts `query`, `group_by`, `duplicates_only`, `browser` filter and `show_urls`. Shows at most 1,000 tabs and states the true total when there are more. Read-only.
 - [execute_script](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/execute-script.tool.js): Execute JavaScript in an open tab and return serialized results. Accepts `tab_id` (numeric or composite `chrome:12`), `script` (JS string expression), `world` (`ISOLATED` or `MAIN`), and `browser` hint.
-- [close_tabs](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/close-tabs.tool.js): Close tabs across connected browsers by `tab_ids` (numbers or composite IDs), `match`, or `duplicates: true`. Supports `dry_run: true` and `browser` filter.
+- [close_tabs](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/close-tabs.tool.js): Close tabs across connected browsers by `tab_ids` (numbers or composite IDs), `match`, or `duplicates: true`. Supports `dry_run: true` (sample includes URLs) and `browser` filter. `match`/`duplicates` skip pinned tabs unless `include_pinned`; closing more than 10 tabs requires `expected_count`, and a mismatch closes nothing.
 - [open_tabs](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/open-tabs.tool.js): Open new tabs in the browser given an array of `urls` and optional target `browser`.
 - [list_tab_groups](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/list-tab-groups.tool.js): List all existing native Chrome Tab Groups in the current browser session. Returns IDs, titles, colors, collapsed states, and parent window IDs.
 - [group_tabs](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/tools/group-tabs.tool.js): Group open Chrome tabs into native Chrome Tab Groups. Required: `tab_ids`. Optional: `group_id`, `title`, `color`.
@@ -49,7 +53,10 @@ Important notes:
 
 ## Tab helpers
 
-- [tabs.js](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/lib/tabs.js): Pure helper functions shared by the read/filter tools: `domainOf`, `matchesQuery`, `findDuplicateIds`, `domainHistogram`, `groupByDomain`, `groupByWindow`, `compact`. Side-effect-free; all selection and grouping logic lives here so the extension stays focused on Chrome API calls.
+- [tabs.js](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/lib/tabs.js): Pure helper functions shared by the read/filter tools: `domainOf`, `matchesQuery`, `findDuplicateIds`, `domainHistogram`, `groupByDomain`, `groupByWindow`, `compact`, `selectCloseTargets`, `checkExpectedCount`. Side-effect-free; all selection and grouping logic lives here so the extension stays focused on Chrome API calls.
+- [clusters.js](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/lib/clusters.js): Pure clustering and signal detection behind `cluster_tabs`.
+- [snapshots.js](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/lib/snapshots.js): Record building, writing and reading behind `snapshot_tabs` and `reopen_tabs`.
+- [closing-tab-loops skill](https://github.com/jamubc/2ManyTabs-MCP/tree/main/native-host/skills/closing-tab-loops): The clean-up method as an Agent Skill; [guide.js](https://github.com/jamubc/2ManyTabs-MCP/blob/main/native-host/lib/guide.js) builds the tool and prompt text and the server instructions from it.
 
 ## Optional
 

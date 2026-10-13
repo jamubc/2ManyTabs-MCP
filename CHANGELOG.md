@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.0] - Unreleased
+
+### Added
+- **Guided tab clean-up.** Tell your agent "I have too many tabs" and it follows a step-by-step method: save a record, sort tabs into clusters, close only what you confirm, and keep the few real to-dos with a next step and a when, in your words. The method ships once, as the `closing-tab-loops` Agent Skill in `native-host/skills/`, and reaches every client as the `start_tab_cleanup` tool, the `close-the-loops` MCP prompt, and server instructions that point agents at it.
+- `cluster_tabs` summarises any number of tabs as per-site clusters with counts, ages, flags and the `match` string that closes each one. Titles on private sites (banking, health, mail, sign-in) are hidden.
+- `snapshot_tabs` saves a record of every open tab to the per-user app-data folder; `reopen_tabs` reopens closed tabs from it.
+- `list_tabs` `show_urls`; the `close_tabs` dry-run sample now includes each tab's URL.
+- The extension reports each tab's last-used time (Chrome 121+, Firefox). Rebuild and reload the extension to get ages; without it ages show as unknown.
+
+### Changed
+- `close_tabs` needs `expected_count` to close more than 10 tabs, and closes nothing if the selection no longer has exactly that many.
+- `close_tabs` with `match` or `duplicates` leaves pinned tabs open unless `include_pinned` is true. Explicit `tab_ids` still close pinned tabs.
+
+### Fixed
+- `list_tabs` silently stopped at 1,000 tabs. It still shows at most 1,000, and now says how many there really are.
+
 ## [3.0.0] - 2026-10-09
 
 ### Added

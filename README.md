@@ -8,6 +8,8 @@
 
 An MCP server and browser extension that let your AI agent tame your overflowing tabs: find them, group them, clean them up, and run scripts in them for you.
 
+Once it's installed, tell your AI **"I have too many tabs open, help me clean up."** It saves a list of everything you have open, shows your tabs a few groups at a time, and closes only what you say yes to. The handful of tabs that are really things to do (buy this, reply to that) get a next step and a "when" in your own words, kept somewhere you look, before their tabs close. [How the clean-up works](#cleaning-up-lots-of-tabs).
+
 ## Install
 
 ### 1. Add the MCP server
@@ -103,10 +105,14 @@ Tab ids look like `chrome:12` or `firefox:34`, and several browsers can be conne
 
 | Tool | Description |
 |---|---|
-| `list_tabs` | Lists open tabs across browsers, grouped by domain or window, with `query`, `duplicates_only` and `browser` filters |
+| `start_tab_cleanup` | Returns the step-by-step clean-up method for the agent to follow; read-only |
+| `cluster_tabs` | Summarises any number of tabs as clusters per site, with counts, flags, sample titles and the `match` string that closes each one |
+| `snapshot_tabs` | Saves a record of every open tab (title, link, window, group, pinned, last used) to a file on your computer |
+| `reopen_tabs` | Reopens tabs from a saved record that are no longer open, with `match` and `dry_run` |
+| `list_tabs` | Lists open tabs across browsers, grouped by domain or window, with `query`, `duplicates_only`, `browser` and `show_urls`; shows up to 1,000 tabs and says when there are more |
 | `execute_script` | Runs JavaScript in a tab (Firefox only), in the `ISOLATED` or `MAIN` world, and returns the result |
 | `get_tab_text` | Returns the body text of a loaded tab |
-| `close_tabs` | Closes tabs by `tab_ids`, `match` or `duplicates`, with `dry_run` to preview |
+| `close_tabs` | Closes tabs by `tab_ids`, `match` or `duplicates`, with `dry_run` to preview. Leaves pinned tabs unless asked, and needs `expected_count` to close more than 10 |
 | `open_tabs` | Opens the given `urls`, adding `https://` when no scheme is present |
 | `activate_tab` | Brings a tab to the foreground and focuses its window |
 | `update_tab` | Sets a tab's `url`, `pinned` or `muted` state |
@@ -121,6 +127,9 @@ Ask your agent in plain words. Some things to try:
 
 | Ask | What happens |
 |---|---|
+| "I have too many tabs open, help me clean up" | A guided clean-up: see [Cleaning up lots of tabs](#cleaning-up-lots-of-tabs) |
+| "Close my YouTube tabs" | Saves a record, shows how many would close, and closes them once you agree |
+| "Bring back the YouTube tabs you closed" | Reopens them from the saved record |
 | "How many tabs do I have open, and on which sites?" | A count per site across every connected browser |
 | "Close my duplicate tabs" | Previews the duplicates, then closes them once you agree |
 | "Group my GitHub tabs and call the group Work" | Creates a named tab group |
@@ -129,6 +138,31 @@ Ask your agent in plain words. Some things to try:
 | "Open the docs for React, Vue and Svelte" | Opens each site in a new tab |
 | "Get every image link on this page" (Firefox) | Runs a script in the tab and returns the links |
 
+## Cleaning up lots of tabs
+
+Say it in your own words: "I have too many tabs", "help me close some tabs", or "I keep tabs open so I don't forget things". Your AI then:
+
+1. Looks at your tabs as groups (one per site), so even a thousand tabs come down to a few dozen decisions.
+2. Asks how much time you have and what you're using right now.
+3. Saves a list of every open tab on your computer before anything closes.
+4. Shows you three to five groups at a time with its best guess, like "Google searches, 12 tabs, probably finished with". You say close, keep, or "that's something I need to do". "Leave it" is always fine.
+5. For the few real to-dos, asks for the very next step and when you'll do it ("when I get home Saturday, I'll check Costco for the Mac mini"), in your words, and keeps it in your notes, a list you copy, or a named tab group, before closing those tabs.
+6. Tells you exactly what will close and how many, and closes nothing until you say yes. For a big batch you type the number back.
+
+It never fills in forms, buys anything, or reads the text of banking, health or email pages. Pinned tabs stay open unless you name them. If a web page's title contains instructions aimed at the AI, it tells you instead of following them.
+
+**What gets saved, and where.** Each clean-up saves one file listing the tabs that were open: title, link, window, group, whether it was pinned, and when it was last used. No cookies, passwords or typed text. The files stay on your computer, in your own user account's app folder:
+
+| System | Folder |
+|---|---|
+| macOS | `~/Library/Application Support/2manytabs/snapshots` |
+| Windows | `%LOCALAPPDATA%\2manytabs\snapshots` |
+| Linux | `~/.local/state/2manytabs/snapshots` |
+
+Ask your AI to "bring back" tabs and it reopens them from the newest list. Delete the folder whenever you like.
+
+**In clients that list MCP prompts**, the `close-the-loops` prompt starts the same clean-up (in Claude Code, type `/mcp__2manytabs-mcp__close-the-loops`). The method also ships as an [Agent Skill](https://agentskills.io) in [`native-host/skills/closing-tab-loops`](native-host/skills/closing-tab-loops): copy that folder into your client's skills folder if you'd rather load it that way. You don't need to; the server hands the same method to your AI when you ask.
+
 ## Compatibility
 
 | | Chrome and Chromium | Firefox |
@@ -136,6 +170,7 @@ Ask your agent in plain words. Some things to try:
 | Tab tools | Yes | Yes |
 | Tab groups | Yes | 139 or newer |
 | `execute_script` | No, returns an error | Yes |
+| Last-used times in `cluster_tabs` and records | Chrome 121 or newer | Yes |
 
 Chrome and Firefox can be connected at the same time. Brave, Edge and Opera use the Chrome build.
 
