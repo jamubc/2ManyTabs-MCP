@@ -10,7 +10,7 @@ Contents: tools used · cluster_tabs · snapshot_tabs · close_tabs · reopen_ta
 
 ## cluster_tabs
 
-Read-only, any number of tabs. Arguments: `top` (default 12), `offset`, `cluster` (an id such as `c03`), `signal` (`quickwin`, `errors`, `search`, `duplicates`, `stale`, `editing`, `sensitive`, `pinned`), `browser`.
+Read-only, any number of tabs. Arguments: `top` (default 12), `offset`, `cluster` (an id such as `c03`, or `all` for every cluster's tab ids in one line each, which is what `group_tabs` needs), `signal` (`quickwin`, `errors`, `search`, `duplicates`, `stale`, `editing`, `sensitive`, `pinned`), `browser`.
 
 The summary's `quick win` line counts broken pages, second copies and search results, leaving out anything pinned, possibly unsaved or private; each tab is counted once, so the parts add up. `signal: "quickwin"` lists them with ids for `close_tabs` `tab_ids`. The user sees this output scroll past in some clients, so summarise it; never paste it.
 

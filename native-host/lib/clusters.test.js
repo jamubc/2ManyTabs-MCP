@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   hostOf, normUrl, annotate, buildClusters, matchSelection,
-  renderSummary, renderOneCluster, renderSignal,
+  renderSummary, renderOneCluster, renderIds, renderSignal,
 } from './clusters.js';
 
 const NOW = Date.UTC(2026, 9, 12, 12);
@@ -101,6 +101,19 @@ describe('rendering', () => {
   it('pages long summaries and rejects unknown cluster ids', () => {
     assert.match(renderSummary(tabs, clusters, { top: 1 }), /2 more cluster\(s\).*offset 1/);
     assert.throws(() => renderOneCluster(clusters, 'c99'), /No cluster "c99"/);
+  });
+
+  it('lists every cluster with its ids only, flagging pinned and editing tabs', () => {
+    const t = annotate([
+      tab('https://a.test/1', 'A1', { id: 1, pinned: true }),
+      tab('https://a.test/2', 'A2', { id: 2 }),
+      tab('https://docs.google.com/document/d/9/edit', 'Draft', { id: 3 }),
+    ], NOW);
+    const out = renderIds(t, buildClusters(t));
+    assert.match(out, /^3 tab\(s\) in 2 cluster\(s\); tab ids per cluster/);
+    assert.match(out, /c01 {2}a\.test {2}· {2}2 {2}· {2}firefox:1\(pinned\) firefox:2/);
+    assert.match(out, /c02 {2}docs\.google\.com {2}· {2}1 {2}· {2}firefox:3\(editing\)/);
+    assert.doesNotMatch(out, /Draft|A1/);
   });
 
   it('counts a quick win once per tab, leaving out pinned, unsaved and private tabs', () => {

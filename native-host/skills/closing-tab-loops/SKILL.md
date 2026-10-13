@@ -73,6 +73,7 @@ I can put these into 5 tab groups: Clutter, To do, My projects, Watch later, Hom
 Tabs will shuffle within each window while I do it; nothing closes or changes window.
 Group them, or leave the tabs as they are?
 ```
+After a yes, get the ids with `cluster_tabs` `cluster: "all"` (every cluster's ids in a few lines), not `list_tabs`.
 
 Next step (step 5), one question at a time:
 ```

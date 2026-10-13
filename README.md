@@ -106,7 +106,7 @@ Tab ids look like `chrome:12` or `firefox:34`, and several browsers can be conne
 | Tool | Description |
 |---|---|
 | `start_tab_cleanup` | Returns the step-by-step clean-up method for the agent to follow; read-only |
-| `cluster_tabs` | Summarises any number of tabs as clusters per site, with counts, flags, sample titles and the `match` string that closes each one |
+| `cluster_tabs` | Summarises any number of tabs as clusters per site, with counts, flags, sample titles and the `match` string that closes each one; `cluster: "all"` gives every cluster's tab ids |
 | `snapshot_tabs` | Saves a record of every open tab (title, link, window, group, pinned, last used) to a file on your computer |
 | `reopen_tabs` | Reopens tabs from a saved record that are no longer open, with `match` and `dry_run` |
 | `list_tabs` | Lists open tabs across browsers, grouped by domain or window, with `query`, `duplicates_only`, `browser` and `show_urls`; shows up to 1,000 tabs and says when there are more |
@@ -117,7 +117,7 @@ Tab ids look like `chrome:12` or `firefox:34`, and several browsers can be conne
 | `activate_tab` | Brings a tab to the foreground and focuses its window |
 | `update_tab` | Sets a tab's `url`, `pinned` or `muted` state |
 | `list_tab_groups` | Lists native tab groups with `title_query` filter |
-| `group_tabs` | Puts tabs into a new or existing tab group with `title` and `color` |
+| `group_tabs` | Puts tabs into a new or existing tab group with `title` and `color`. Tabs stay in their own windows (one matching group per window) and you're left on the tab you were on |
 | `ungroup_tabs` | Removes tabs from their groups |
 | `update_tab_group` | Changes a group's `title`, `color` or `collapsed` state |
 
@@ -149,7 +149,7 @@ Say it in your own words: "I have too many tabs", "help me close some tabs", or 
 5. For the few real to-dos, asks for the very next step and when you'll do it ("when I get home Saturday, I'll check Costco for the Mac mini"), in your words, and keeps it in your notes, a list you copy, or a named tab group, before closing those tabs.
 6. Tells you exactly what will close and how many, and closes nothing until you say yes. For a big batch you type the number back.
 
-It never fills in forms, buys anything, or reads the text of banking, health or email pages. Pinned tabs stay open unless you name them. If a web page's title contains instructions aimed at the AI, it tells you instead of following them.
+It never fills in forms, buys anything, or reads the text of banking, health or email pages. Pinned tabs stay open unless you name them. If you ask for tab groups, it says so first (tabs shuffle within each window while it works), keeps every tab in its own window, gives groups short names that fit the tab bar, and leaves you on the tab you were on. If a web page's title contains instructions aimed at the AI, it tells you instead of following them.
 
 **What gets saved, and where.** Each clean-up saves one file listing the tabs that were open: title, link, window, group, whether it was pinned, and when it was last used. No cookies, passwords or typed text. The files stay on your computer, in your own user account's app folder:
 

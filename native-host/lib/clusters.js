@@ -223,6 +223,22 @@ export function renderOneCluster(clusters, id) {
   return lines.join('\n');
 }
 
+// Every cluster with its tab ids and nothing else: what group_tabs or close_tabs tab_ids need,
+// in a few lines, so an agent never has to print the whole tab list to collect ids.
+export function renderIds(annotated, clusters) {
+  const lines = [
+    `${annotated.length} tab(s) in ${clusters.length} cluster(s); tab ids per cluster, for group_tabs or close_tabs tab_ids.`,
+  ];
+  for (const c of clusters) {
+    const ids = c.tabs.map((t) => {
+      const flags = ['pinned', 'editing'].filter((f) => t[f]);
+      return idOf(t) + (flags.length ? `(${flags.join(',')})` : '');
+    });
+    lines.push(`${c.id}  ${c.key}  ·  ${c.tabs.length}  ·  ${ids.join(' ')}`);
+  }
+  return lines.join('\n');
+}
+
 export function renderSignal(annotated, signal) {
   const hits = annotated.filter(SIGNALS[signal]);
   const lines = [`${hits.length} tab(s): ${signal}`];
