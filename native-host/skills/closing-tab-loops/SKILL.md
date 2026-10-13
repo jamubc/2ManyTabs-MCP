@@ -30,11 +30,13 @@ The templates in "Messages" below are the default shape. Fill them with real nam
 - **Keep is the default.** A tab closes only after the user says yes to it by group and count. "Ok" to another question is not a yes.
 - **Private sites stay private.** Do not read page text on banking, health, mail, password or sign-in pages; titles are enough, and `cluster_tabs` already hides the titles it recognises.
 - **Leave `execute_script` alone** unless the user asks for it.
+- **Don't move things under them.** They are often using the browser while you work. Grouping shuffles tabs within each window's tab bar, so say that in the question that offers it and group only after a yes. `group_tabs` keeps tabs in their own windows and leaves them on the tab they were on.
+- **Group names fit at a glance.** The tab bar shows about 15 characters. One to three words, meaning first: "Watch later", "Homelab". A to-do group starts with its verb: "Buy Mac mini", "Book physio". No numbers or counts in the name.
 - **Promise only what you did.** Parking a specific plan has reduced nagging thoughts in lab studies; it has not been shown to lower anxiety. Say what you did, not how it will feel.
 
 ## Workflow
 
-1. **Look.** Call `cluster_tabs` once. Do not use `list_tabs` to survey; it prints every tab into the user's screen. If the call fails, say in one line that the tab tool is not connected and that the 2ManyTabs extension's popup should say "Connected", then stop.
+1. **Look.** Call `cluster_tabs` once; its first page is enough for a survey. Do not use `list_tabs` to survey; it prints every tab into the user's screen. If the call fails, say in one line that the tab tool is not connected and that the 2ManyTabs extension's popup should say "Connected", then stop.
 2. **Survey reply** (template below). Treat pinned tabs and tabs used today as in use. If the user asked to survey only, this is the whole job: end there.
 3. **Save a record before the first close.** Call `snapshot_tabs` once per session, then say once: "I saved a list of your open tabs first." Mention the file only if asked.
 4. **Sort in batches.** Three to five groups per message, quickest settled first: copies, broken pages and finished searches, then old reading, then the rest. `cluster_tabs` with `signal: "quickwin"` lists the obvious clutter with ids; `cluster` shows one group's tabs; `offset` pages on. Groups and their usual outcome: `references/triage.md`. Accept "leave it" and "stop" at any point, and after each batch say in one line how many are settled and how many remain.
@@ -63,6 +65,13 @@ Next three groups, my guess in brackets:
 2. Security reading, 9 [read already?] like "OWASP LLM01"
 3. Browser games, 3 [done?] like "Nanolathe"
 Which should close? Or "keep 2", "show me 1", "stop".
+```
+
+Offer tab groups (step 4, only if they want them):
+```
+I can put these into 5 tab groups: Clutter, To do, My projects, Watch later, Homelab.
+Tabs will shuffle within each window while I do it; nothing closes or changes window.
+Group them, or leave the tabs as they are?
 ```
 
 Next step (step 5), one question at a time:

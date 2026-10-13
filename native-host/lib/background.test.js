@@ -108,6 +108,64 @@ describe('groupTabs', () => {
     await groupTabs([3], undefined, undefined, undefined);
     assert.equal(called, false);
   });
+
+  it('keeps tabs in their own windows: one matching group per window', async () => {
+    browser.tabs.query = async () => [
+      { id: 1, windowId: 10 }, { id: 2, windowId: 20 }, { id: 3, windowId: 10 },
+    ];
+    const groupCalls = [];
+    browser.tabs.group = async (opts) => { groupCalls.push(opts); return 100 + groupCalls.length; };
+    const updates = [];
+    browser.tabGroups.update = async (id, obj) => { updates.push({ id, obj }); };
+    const result = await groupTabs([1, 2, 3], undefined, 'Read later', 'purple');
+    assert.deepEqual(groupCalls, [
+      { tabIds: [1, 3], createProperties: { windowId: 10 } },
+      { tabIds: [2], createProperties: { windowId: 20 } },
+    ]);
+    assert.deepEqual(updates.map(u => u.obj), [
+      { title: 'Read later', color: 'purple' },
+      { title: 'Read later', color: 'purple' },
+    ]);
+    assert.deepEqual(result, { groupId: 101, groupIds: [101, 102], grouped: 3, windows: 2 });
+  });
+
+  it('adds to an existing group only in its window, and copies its look elsewhere', async () => {
+    browser.tabs.query = async () => [{ id: 1, windowId: 10 }, { id: 2, windowId: 20 }];
+    browser.tabGroups.get = async () => ({ windowId: 10, title: 'Work', color: 'blue' });
+    const groupCalls = [];
+    browser.tabs.group = async (opts) => { groupCalls.push(opts); return opts.groupId ?? 55; };
+    const updates = [];
+    browser.tabGroups.update = async (id, obj) => { updates.push({ id, obj }); };
+    await groupTabs([1, 2], 7, undefined, undefined);
+    assert.deepEqual(groupCalls, [
+      { tabIds: [1], groupId: 7 },
+      { tabIds: [2], createProperties: { windowId: 20 } },
+    ]);
+    assert.deepEqual(updates, [{ id: 55, obj: { title: 'Work', color: 'blue' } }]);
+  });
+
+  it('puts the user back on the tab and window they were on', async () => {
+    let state = [
+      { id: 1, windowId: 10, active: true }, { id: 2, windowId: 10, active: false },
+    ];
+    browser.tabs.query = async () => state;
+    browser.tabs.group = async () => {
+      // Simulate a browser that switched the active tab while grouping.
+      state = [{ id: 1, windowId: 10, active: false }, { id: 2, windowId: 10, active: true }];
+      return 9;
+    };
+    browser.tabGroups.update = async () => {};
+    const focused = [10, 20];
+    browser.windows.getLastFocused = async () => ({ id: focused.shift() });
+    const activated = [];
+    browser.tabs.update = async (id, props) => { activated.push({ id, props }); };
+    const focusedWindows = [];
+    browser.windows.update = async (id, props) => { focusedWindows.push({ id, props }); };
+    await groupTabs([2], undefined, undefined, undefined);
+    assert.deepEqual(activated, [{ id: 1, props: { active: true } }]);
+    assert.deepEqual(focusedWindows, [{ id: 10, props: { focused: true } }]);
+    delete browser.windows.getLastFocused;
+  });
 });
 
 describe('updateGroup', () => {

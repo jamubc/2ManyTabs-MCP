@@ -6,6 +6,21 @@ export const TITLE_TRUNCATE_LABEL = 90;
 
 export const HISTOGRAM_BAR_MAX = 20;
 
+// A tab bar shows roughly this much of a group's name before cutting it off.
+export const GROUP_TITLE_FITS = 15;
+
+export const GROUP_TITLE_DESCRIBE =
+  'Name shown on the group in the tab bar, which cuts off after about 15 characters. ' +
+  'Use one to three words with the meaning first: "Watch later", "Homelab", or a verb ' +
+  'for a to-do ("Buy Mac mini", "Book physio"). No numbers or counts; they go stale.';
+
+export function groupTitleNote(title) {
+  if (!title || title.length <= GROUP_TITLE_FITS) return undefined;
+  return `"${title}" is ${title.length} characters, so the tab bar will show about ` +
+    `"${title.slice(0, GROUP_TITLE_FITS)}…". If that start doesn't say what the group is, ` +
+    'rename it shorter with update_tab_group.';
+}
+
 export function domainOf(tab) {
   if (!tab || tab.url == null) {
     console.error('[domainOf] tab URL is missing or tab is null/undefined:', tab);

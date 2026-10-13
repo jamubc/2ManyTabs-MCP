@@ -12,7 +12,21 @@ import {
   selectCloseTargets,
   checkExpectedCount,
   CONFIRM_COUNT_OVER,
+  groupTitleNote,
 } from './tabs.js';
+
+describe('groupTitleNote', () => {
+  it('says nothing for a name that fits', () => {
+    assert.equal(groupTitleNote('Watch later'), undefined);
+    assert.equal(groupTitleNote(undefined), undefined);
+  });
+
+  it('shows how a long name will be cut off', () => {
+    const note = groupTitleNote('5 Homelab, AI tools, odds (37)');
+    assert.match(note, /30 characters/);
+    assert.match(note, /"5 Homelab, AI t…"/);
+  });
+});
 
 describe('selectCloseTargets', () => {
   const all = [

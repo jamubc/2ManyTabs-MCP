@@ -27,7 +27,7 @@ Ask once: "Where do you look when you want to know what to do next?" Offer only 
 - **An app you have a tool for** (InstantNotes, Reminders, Todoist, a calendar): use its create tool; next step as the title, when as the due date or note, why and link in the note.
 - **A file**, if you can write files here: ask where; suggest `open-loops.md`; newest at the top.
 - **A list they copy**, if you cannot write anywhere they look: show the blocks once and wait until they say it is saved.
-- **The browser**, if they have no to-do place: keep one tab per to-do in a collapsed tab group named with the step and when (`group_tabs` with `title` like "Sat: check Costco Mac mini", then `update_tab_group` `collapsed: true`). Close the rest of that group's tabs.
+- **The browser**, if they have no to-do place: keep one tab per to-do in a collapsed tab group named with the step and when in about 15 characters (`group_tabs` with `title` like "Sat: Mac mini", then `update_tab_group` `collapsed: true`). Close the rest of that group's tabs.
 - **Nowhere**: say plainly the to-do then lives only in its tab, and leave that tab open.
 
 ## Check before closing

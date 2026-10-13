@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { callExtension } from '../bridge.js';
+import { GROUP_TITLE_DESCRIBE, groupTitleNote } from '../lib/tabs.js';
 
 export const updateTabGroupTool = {
   name: 'update_tab_group',
@@ -17,7 +18,7 @@ export const updateTabGroupTool = {
     group_id: z.union([z.number().int(), z.string()])
       .describe('The ID (number or composite like "chrome:5") of the tab group to update (obtained from list_tab_groups or list_tabs).'),
     title: z.string().optional()
-      .describe('New title for the group.'),
+      .describe(GROUP_TITLE_DESCRIBE),
     color: z.enum(['grey', 'blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange']).optional()
       .describe('New color for the group.'),
     collapsed: z.boolean().optional()
@@ -31,6 +32,7 @@ export const updateTabGroupTool = {
     return JSON.stringify({
       message: `Successfully updated tab group ${group_id}.`,
       groupId: res.updated,
+      title_note: groupTitleNote(title),
     }, null, 2);
   },
 };
