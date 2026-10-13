@@ -15,7 +15,7 @@ The person reading is usually overloaded, often has ADHD, and may be juggling ot
 
 1. **First line: the answer or where things stand**, in one plain sentence.
 2. **Then at most five short lines.** Number them when they are choices.
-3. **Last line: one question**, with the easy answers spelled out ("Say close 1, keep 2, or leave it").
+3. **Last line: one question**, with the easy answers spelled out and the one you would pick first ("Clear the 11, or look at the to-dos? Or leave it."). Ask only what you cannot sensibly decide yourself; a yes they give without reading protects nothing.
 
 Leave out anything that does not change their next choice: how you got a number, which tool said what, file names and paths, tab ids, tables, headings, a list of things you did not do, and "my guesses may be wrong" more than once a session. Say each number once, and make the numbers add up.
 
