@@ -1,6 +1,6 @@
 {
   "name": "2manytabs-mcp-host",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "MCP server that exposes Chrome and Firefox tabs via the 2ManyTabs MCP extension",
   "keywords": [
     "mcp",
