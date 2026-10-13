@@ -12,11 +12,15 @@ describe('cleanupGuide', () => {
   it('carries the workflow and the included references, without frontmatter', () => {
     assert.doesNotMatch(guide, /^---\nname:/);
     assert.match(guide, /^# Closing tab loops/);
-    for (const ref of ['Triage', 'Parking', 'Wording']) assert.match(guide, new RegExp(`# Reference: ${ref}`));
+    for (const ref of ['Triage', 'Parking']) assert.match(guide, new RegExp(`# Reference: ${ref}`));
+  });
+
+  it('stays compact, since every clean-up pays for it in context and the user may see it', () => {
+    assert.ok(guide.length < 16000, `guide is ${guide.length} chars`);
   });
 
   it('points at sections, not at files the reader of the tool output cannot open', () => {
-    assert.doesNotMatch(guide, /references\/(triage|parking|wording|tool-notes)\.md/);
+    assert.doesNotMatch(guide, /references\/(triage|parking|tool-notes)\.md/);
     assert.doesNotMatch(guide, /## More detail/);
   });
 
@@ -43,6 +47,12 @@ describe('skill folder', () => {
     for (const [, file] of md.matchAll(/`(references\/[a-z-]+\.md)`/g)) {
       assert.ok(fs.existsSync(new URL(file, SKILL)), `${file} is missing`);
     }
+  });
+});
+
+describe('tool text limits', () => {
+  it('keeps every description under the 2,048 characters Claude Code shows', () => {
+    for (const t of toolRegistry) assert.ok(t.description.length < 2048, `${t.name}: ${t.description.length}`);
   });
 });
 

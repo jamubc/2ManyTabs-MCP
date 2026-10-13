@@ -115,7 +115,7 @@ assert(prompts.includes('close-the-loops'), 'host lists the close-the-loops prom
 const prompt = await client.getPrompt({ name: 'close-the-loops', arguments: { focus: 'my YouTube tabs' } });
 assert(/this: my YouTube tabs[\s\S]*# Closing tab loops/.test(prompt.messages[0].content.text), 'prompt carries the focus and the method');
 const res = await client.callTool({ name: 'start_tab_cleanup', arguments: {} });
-assert(!res.isError && /# Reference: Wording/.test(res.content[0].text), 'start_tab_cleanup works through the host');
+assert(!res.isError && /# Reference: Parking/.test(res.content[0].text), 'start_tab_cleanup works through the host');
 await client.close();
 
 console.error(failures ? `\n${failures} check(s) failed` : '\nall checks passed');

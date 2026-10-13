@@ -6,7 +6,7 @@ import fs from 'node:fs';
 // tool/prompt text from the skill so the three cannot drift apart.
 
 const SKILL_DIR = new URL('../skills/closing-tab-loops/', import.meta.url);
-const INCLUDED_REFERENCES = ['triage', 'parking', 'wording'];
+const INCLUDED_REFERENCES = ['triage', 'parking'];
 
 export const SERVER_INSTRUCTIONS = [
   '2ManyTabs controls the user\'s real browser tabs.',

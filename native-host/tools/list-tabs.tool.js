@@ -10,9 +10,10 @@ export const listTabsTool = {
   name: 'list_tabs',
   title: 'List Tabs',
   description:
-    'Read open browser tabs. Returns a domain histogram (the fastest way to understand a large ' +
-    'tab set) plus a detailed view. When summarizing the results for the user, you should ' +
-    'include the histogram bar graph in your response. Filter with `query`, reshape with ' +
+    'Read open browser tabs: a domain histogram plus one line per tab. Best for finding ' +
+    'specific tabs with `query`. To survey, sort or clean up many tabs, use cluster_tabs ' +
+    'instead: it summarises any number of tabs in a few lines, where this prints every tab. ' +
+    'Filter with `query`, reshape with ' +
     '`group_by`, or isolate redundant tabs with `duplicates_only`. Shows at most ' +
     `${MAX_TAB_LIST} tabs and says so when there are more; cluster_tabs summarises any number. ` +
     'Read-only — never closes anything.',

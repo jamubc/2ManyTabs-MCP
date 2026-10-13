@@ -103,6 +103,19 @@ describe('rendering', () => {
     assert.throws(() => renderOneCluster(clusters, 'c99'), /No cluster "c99"/);
   });
 
+  it('counts a quick win once per tab, leaving out pinned, unsaved and private tabs', () => {
+    const qw = annotate([
+      tab('https://www.google.com/search?q=a', 'a - Google Search'),
+      tab('https://www.google.com/search?q=a', 'a - Google Search'),
+      tab('about:neterror?e=x', 'Problem loading page'),
+      tab('https://www.google.com/search?q=b', 'b - Google Search', { pinned: true }),
+      tab('https://docs.google.com/document/d/1/edit', 'Draft'),
+      tab('https://docs.google.com/document/d/1/edit', 'Draft'),
+    ], NOW);
+    assert.match(renderSummary(qw, buildClusters(qw)), /quick win: 3 \(1 searches, 1 copies, 1 broken pages\)/);
+    assert.match(renderSignal(qw, 'quickwin'), /^3 tab\(s\): quickwin/);
+  });
+
   it('says when ages are unknown', () => {
     const noAge = annotate([tab('https://a.test/', 'A', { lastAccessed: undefined })], NOW);
     assert.match(renderSummary(noAge, buildClusters(noAge)), /ages are unknown/);

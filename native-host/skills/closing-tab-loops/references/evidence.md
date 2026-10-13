@@ -34,6 +34,20 @@ Contents: what holds up · what did not · design choice → evidence · tab beh
 - **The simple choice-overload effect** has a mean near zero in a 63-condition meta-analysis (Scheibehenne et al. 2010) but appears when decisions are hard, preferences unclear and effort is being minimised, which fits a large pile.
 - **ADHD claims:** "object permanence" and "time blindness" as mechanisms have no supporting study. Evidence that exists: timing and working-memory differences in children, and elevated hoarding symptoms in adult clinic samples. If-then plans have helped children with ADHD in small studies from one lab; no adult trial was found. Do not put any of this in user-facing copy.
 
+## Claims you can and cannot make to the user
+
+If the user asks why, give the short version. You can say:
+
+- People often keep tabs open as reminders, so closing one can feel like losing the reminder. That is why each real to-do gets a place and a when before its tab closes.
+- In small lab studies, a specific plan for an unfinished goal reduced how much it intruded on other thinking. No independent replication has been found, so call it early evidence.
+- Specific "when X, I will Y" plans have helped people start and finish hard-to-start goals in many studies. It is not a guarantee.
+
+You cannot say: that unfinished tasks are remembered better or that open tabs "use up memory" (a 2025 meta-analysis of 59 studies found no memory advantage); that parking lowers anxiety (the plan studies found it did not); that saving to an app "frees your mind" (untested); that the method is proven; any effect size; or anything about ADHD mechanisms as established.
+
+## How messages are shaped, and why
+
+The "How every message looks" rules in SKILL.md come from a 2026-10-12 review of research on readable replies, plain language, cognitive accessibility and agent tool design, prompted by a correct survey reply that its ADHD reader found too heavy to use. In short: answer first, few items, one question, and no process talk. Accessibility and plain-language guidance agree on one purpose per message and little extra content. Answer-first rule sets for agents are popular but untested. Models miss word-count limits often, so the skill sets a shape (lines and one question) and shows filled examples instead of a word cap. No study has tested a reply template with ADHD readers; the owner's own log was the trigger, so check new wording against that case before keeping it.
+
 ## Design choice → evidence
 
 | Choice | Why | Strength |

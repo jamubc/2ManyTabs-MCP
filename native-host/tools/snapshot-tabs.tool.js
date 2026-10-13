@@ -30,6 +30,7 @@ export const snapshotTabsTool = {
       windows: record.windows.length,
       by_browser: byBrowser,
       pinned: tabs.filter((t) => t.pinned).length,
+      for_your_reply: 'Say once that a list of their open tabs was saved first. Give the name or path only if they ask.',
     }, null, 2);
   },
 };

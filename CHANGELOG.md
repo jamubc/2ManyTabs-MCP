@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 - The extension reports each tab's last-used time (Chrome 121+, Firefox). Rebuild and reload the extension to get ages; without it ages show as unknown.
 
 ### Changed
+- Clean-up replies are short by design: each message leads with where things stand, shows at most five short lines and ends with one question, from filled templates in the skill. On a real 90-tab set a "survey only" reply went from 17 lines and 368 words to 5 or 6 lines and about 120 words.
+- `cluster_tabs` adds a "quick win" count (broken pages, copies and searches, each counted once) and a `quickwin` signal, and shows 12 groups by default.
+- `list_tabs` no longer asks agents to put its bar graph in their reply, and points them at `cluster_tabs` for surveys.
 - `close_tabs` needs `expected_count` to close more than 10 tabs, and closes nothing if the selection no longer has exactly that many.
 - `close_tabs` with `match` or `duplicates` leaves pinned tabs open unless `include_pinned` is true. Explicit `tab_ids` still close pinned tabs.
 

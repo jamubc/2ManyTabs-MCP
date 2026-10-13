@@ -98,7 +98,18 @@ export function buildClusters(annotated) {
     }));
 }
 
+// Obvious clutter the user can settle in one decision: broken pages, second copies and search
+// results, minus anything pinned, possibly unsaved, or private.
+function quickWinKind(t) {
+  if (t.pinned || t.editing || t.sensitive) return null;
+  if (t.error) return 'broken pages';
+  if (t.dup) return 'copies';
+  if (t.search) return 'searches';
+  return null;
+}
+
 const SIGNALS = {
+  quickwin: (t) => quickWinKind(t) !== null,
   errors: (t) => t.error,
   search: (t) => t.search,
   duplicates: (t) => t.dup,
@@ -149,7 +160,7 @@ function renderCluster(c) {
   ].join('\n');
 }
 
-export function renderSummary(annotated, clusters, { top = 25, offset = 0 } = {}) {
+export function renderSummary(annotated, clusters, { top = 12, offset = 0 } = {}) {
   const n = annotated.length;
   const count = (f) => annotated.filter(SIGNALS[f]).length;
   const browsers = [...new Set(annotated.map((t) => t.browser).filter(Boolean))];
@@ -160,6 +171,16 @@ export function renderSummary(annotated, clusters, { top = 25, offset = 0 } = {}
       `search results ${count('search')}  ·  untouched ${STALE_DAYS}d+ ${count('stale')}  ·  ` +
       `may hold unsaved work ${count('editing')}  ·  private sites ${count('sensitive')}`,
   ];
+  const kinds = new Map();
+  for (const t of annotated) {
+    const k = quickWinKind(t);
+    if (k) kinds.set(k, (kinds.get(k) ?? 0) + 1);
+  }
+  const quick = [...kinds.values()].reduce((a, b) => a + b, 0);
+  if (quick) {
+    lines.push(`  quick win: ${quick} (${[...kinds].map(([k, v]) => `${v} ${k}`).join(', ')}); ` +
+      'signal "quickwin" lists them with ids');
+  }
   const ages = annotated.map((t) => t.age).filter((a) => a !== null);
   if (!ages.length && n) {
     lines.push('  Last-used times are not available from this browser extension, so ages are unknown.');
