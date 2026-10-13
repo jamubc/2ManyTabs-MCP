@@ -49,15 +49,28 @@ globalThis.WebSocket = class {
   close() {}
 };
 
-let groupTabs, updateGroup, updateTab, getTabText, executeScript;
+let queryTabs, groupTabs, updateGroup, updateTab, getTabText, executeScript;
 
 before(async () => {
   const bg = await import('../../extension/lib/tab-ops.js');
+  queryTabs = bg.queryTabs;
   groupTabs = bg.groupTabs;
   updateGroup = bg.updateGroup;
   updateTab = bg.updateTab;
   getTabText = bg.getTabText;
   executeScript = bg.executeScript;
+});
+
+describe('queryTabs', () => {
+  it('passes lastAccessed through, and leaves it undefined when the browser omits it', async () => {
+    browser.tabs.query = async () => [
+      { id: 1, windowId: 1, title: 'A', url: 'https://a.test/', lastAccessed: 1760000000000 },
+      { id: 2, windowId: 1, title: 'B', url: 'https://b.test/' },
+    ];
+    const tabs = await queryTabs();
+    assert.equal(tabs[0].lastAccessed, 1760000000000);
+    assert.equal(tabs[1].lastAccessed, undefined);
+  });
 });
 
 describe('groupTabs', () => {

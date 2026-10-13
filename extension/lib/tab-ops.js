@@ -21,6 +21,7 @@ export async function queryTabs() {
     pinned:   t.pinned,
     audible:  t.audible,
     status:   t.status,
+    lastAccessed: t.lastAccessed,
   }));
 }
 

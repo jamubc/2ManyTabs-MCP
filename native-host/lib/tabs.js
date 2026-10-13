@@ -35,6 +35,64 @@ export function findDuplicateIds(tabs) {
   return dupes;
 }
 
+// Bulk actions above this size must name the count the user agreed to (`expected_count`),
+// so a model that skips the preview, or a page that changed since it, cannot widen the action.
+export const CONFIRM_COUNT_OVER = 10;
+
+export function checkExpectedCount(count, expected, verb) {
+  if (expected === undefined) {
+    if (count > CONFIRM_COUNT_OVER) {
+      throw new Error(
+        `This would ${verb} ${count} tabs, so it needs expected_count. Preview it with dry_run: true, ` +
+        `show the user what will ${verb}, and after they agree call again with expected_count: ${count}. ` +
+        `Nothing was done.`);
+    }
+    return;
+  }
+  if (expected !== count) {
+    throw new Error(
+      `expected_count is ${expected} but the selection now has ${count} tabs, so nothing was done. ` +
+      `Tabs may have changed since the preview: run it again with dry_run: true.`);
+  }
+}
+
+export function selectCloseTargets(all, { tab_ids, match, duplicates, include_pinned = false }) {
+  const modes = [tab_ids?.length ? 'tab_ids' : null, match ? 'match' : null, duplicates ? 'duplicates' : null]
+    .filter(Boolean);
+  if (modes.length === 0) throw new Error('Provide one selection mode: tab_ids, match, or duplicates:true.');
+  if (modes.length > 1) throw new Error(`Use only one selection mode at a time (got: ${modes.join(', ')}).`);
+
+  if (tab_ids?.length) {
+    const byId = new Map(all.map((t) => [t.id, t]));
+    const byComposite = new Map(all.map((t) => [`${t.browser}:${t.id}`, t]));
+    const targets = [];
+    let missing = 0;
+    for (const rawId of tab_ids) {
+      const found = typeof rawId === 'string' && rawId.includes(':')
+        ? byComposite.get(rawId.toLowerCase())
+        : byId.get(Number(rawId));
+      if (found) targets.push(found);
+      else missing++;
+    }
+    let reason = `${targets.length} tab(s) by id`;
+    if (missing) reason += ` (${missing} id(s) no longer exist, skipped)`;
+    return { targets, reason, pinnedKept: 0 };
+  }
+
+  let picked, reason;
+  if (duplicates) {
+    const dupIds = new Set(findDuplicateIds(all));
+    picked = all.filter((t) => dupIds.has(t.id));
+    reason = 'duplicate tabs';
+  } else {
+    picked = all.filter((t) => matchesQuery(t, match));
+    reason = `tabs matching "${match}"`;
+  }
+  // Pinned tabs are usually live work; a broad selector leaves them unless asked.
+  const targets = include_pinned ? picked : picked.filter((t) => !t.pinned);
+  return { targets, reason, pinnedKept: picked.length - targets.length };
+}
+
 export function domainHistogram(tabs, limit = 15) {
   const counts = {};
   for (const t of tabs) {

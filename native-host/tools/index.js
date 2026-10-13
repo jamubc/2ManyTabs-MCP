@@ -9,10 +9,18 @@ import { activateTabTool } from './activate-tab.tool.js';
 import { updateTabTool } from './update-tab.tool.js';
 import { getTabTextTool } from './get-tab-text.tool.js';
 import { executeScriptTool } from './execute-script.tool.js';
+import { startTabCleanupTool } from './start-tab-cleanup.tool.js';
+import { snapshotTabsTool } from './snapshot-tabs.tool.js';
+import { clusterTabsTool } from './cluster-tabs.tool.js';
+import { reopenTabsTool } from './reopen-tabs.tool.js';
 
 export const toolRegistry = [
+  startTabCleanupTool,
   listTabsTool,
+  clusterTabsTool,
+  snapshotTabsTool,
   closeTabsTool,
+  reopenTabsTool,
   openTabsTool,
   listTabGroupsTool,
   groupTabsTool,

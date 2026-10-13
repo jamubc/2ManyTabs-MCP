@@ -31,12 +31,17 @@
     "host.js",
     "bridge.js",
     "lib/tabs.js",
-    "tools/"
+    "lib/clusters.js",
+    "lib/snapshots.js",
+    "lib/guide.js",
+    "tools/",
+    "skills/"
   ],
   "scripts": {
     "start": "node host.js",
-    "test":  "node --test lib/tabs.test.js lib/background.test.js",
+    "test":  "node --test lib/tabs.test.js lib/background.test.js lib/clusters.test.js lib/snapshots.test.js lib/guide.test.js",
     "test:multibrowser": "MANYTABS_BRIDGE_PORT=19878 node test/multibrowser.js",
+    "test:cleanup": "MANYTABS_BRIDGE_PORT=19879 node test/cleanup-flow.js",
     "lint":  "eslint .",
     "prepack": "cp ../README.md ../LICENSE .",
     "postpack": "rm -f README.md LICENSE"
