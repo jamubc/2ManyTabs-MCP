@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.1.1] - 2026-11-14
+
+### Security
+- The server now requires `@modelcontextprotocol/sdk` 1.32.2 and `zod` 4.6.7 or newer, and a fresh install resolves patched versions of the packages named in 62 Dependabot alerts (among them `proxy-addr`, `hono`, `fast-uri`, `ip-address`, `body-parser` and `qs`). Run `npx -y 2manytabs-mcp-host` again, or `npm install` in `native-host/`, to pick them up.
+- The extension's build tools (`vite`, `source-map-js`) are updated. The extension itself is unchanged.
+
+### Fixed
+- The server reported itself as version 3.0.0 to MCP clients. It now reports its real version.
+
 ## [3.1.0] - 2026-10-12
 
 ### Added

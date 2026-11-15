@@ -1,6 +1,6 @@
 {
   "name": "2manytabs-mcp-host",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "MCP server that exposes Chrome and Firefox tabs via the 2ManyTabs MCP extension",
   "keywords": [
     "mcp",
@@ -52,9 +52,9 @@
     "globals":    "^15.0.0"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "ws": "^8.18.0",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "engines": {
     "node": ">=18.0.0"
