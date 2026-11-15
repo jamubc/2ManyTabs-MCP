@@ -1,0 +1,19 @@
+SECURITY.md
+  s_e6873bd1bc09be::t_48c6c246477391 1-17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b5759bc36e83c0771ee6b3bd4cb53613c42268be",
+  "prompts": {},
+  "sessions": {
+    "s_e6873bd1bc09be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "68e23689-43da-4979-8056-ecb7bff859d9",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
