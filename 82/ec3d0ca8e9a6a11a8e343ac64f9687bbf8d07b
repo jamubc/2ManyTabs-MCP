@@ -1,0 +1,39 @@
+native-host/host.js
+  s_ee2f11177b4ad8::t_39fdbb6d78be19 10
+extension/package.json
+  s_ee2f11177b4ad8::t_b5afaa880c04e1 3
+native-host/package.json
+  s_ee2f11177b4ad8::t_d8bdb2f1e4fb45 3
+  s_ee2f11177b4ad8::t_ee4764f3134742 55,57
+CHANGELOG.md
+  s_ee2f11177b4ad8::t_ad79eb83f1a523 5-7,9-13
+  s_ee2f11177b4ad8::t_ba87e673b2e599 8
+extension/package-lock.json
+  s_11ee478ff9ab8b::t_16ad7718904dea 3,9
+native-host/package-lock.json
+  s_11ee478ff9ab8b::t_f8dee3d13664a7 3,9,11,13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "82ec3d0ca8e9a6a11a8e343ac64f9687bbf8d07b",
+  "prompts": {},
+  "sessions": {
+    "s_11ee478ff9ab8b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4e6433d0-2d57-4e30-9087-0c46ff7e4080",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    },
+    "s_ee2f11177b4ad8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "028c9955-230c-463b-a09e-1bbbbecad766",
+        "model": "claude-fable-5-2"
+      },
+      "human_author": "jamubc <150970140+jamubc@users.noreply.github.com>"
+    }
+  }
+}
