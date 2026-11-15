@@ -7,7 +7,7 @@ import { toolRegistry } from './tools/index.js';
 import { SERVER_INSTRUCTIONS, cleanupGuide } from './lib/guide.js';
 
 const server = new McpServer(
-  { name: '2manytabs-mcp', version: '3.0.0' },
+  { name: '2manytabs-mcp', version: '3.1.1' },
   { instructions: SERVER_INSTRUCTIONS },
 );
 
